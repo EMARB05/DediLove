@@ -1,4 +1,5 @@
 import { Playfair_Display, Plus_Jakarta_Sans } from "next/font/google";
+import { AuthProvider } from "../context/AuthContext";
 import "./globals.css";
 
 const playfairDisplay = Playfair_Display({
@@ -27,7 +28,7 @@ export default function RootLayout({ children }) {
       className={`${playfairDisplay.variable} ${plusJakartaSans.variable}`}
     >
       <body className="bg-[#fcf9f7] font-sans text-[#1b1c1b] antialiased min-h-screen flex flex-col">
-        {children}
+         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

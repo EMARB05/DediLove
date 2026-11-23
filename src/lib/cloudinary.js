@@ -1,11 +1,6 @@
+import { auth } from "../lib/firebase";
 export async function comprimirYSubirImagen(file) {
-  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-
-  if (!cloudName || !uploadPreset) {
-    throw new Error("Faltan las variables de Cloudinary en .env.local");
-  }
-
+  
   // 1. Comprimir en el navegador con canvas antes de enviar
   const blobComprimido = await new Promise((resolve, reject) => {
     const img = new Image();
@@ -47,16 +42,31 @@ export async function comprimirYSubirImagen(file) {
   });
 
   // 2. Subir a Cloudinary
+   // 2. Pedir firma al servidor
+  const user = auth.currentUser;
+  if (!user) throw new Error("Inicia sesión para subir fotos");
+  const idToken = await user.getIdToken();
+
+  const resFirma = await fetch("/api/cloudinary/firma", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${idToken}` },
+  });
+  if (!resFirma.ok) throw new Error("No se pudo autorizar la subida");
+  const { signature, timestamp, folder, apiKey, cloudName } =
+    await resFirma.json();
+
+  // 3. Subir a Cloudinary como imagen privada
   const formData = new FormData();
   formData.append("file", blobComprimido, "recuerdo.webp");
-  formData.append("upload_preset", uploadPreset);
+  formData.append("api_key", apiKey);
+  formData.append("timestamp", timestamp);
+  formData.append("signature", signature);
+  formData.append("folder", folder);
+  formData.append("type", "authenticated");
 
   const respuesta = await fetch(
     `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-    {
-      method: "POST",
-      body: formData,
-    }
+    { method: "POST", body: formData }
   );
 
   if (!respuesta.ok) {
@@ -64,5 +74,6 @@ export async function comprimirYSubirImagen(file) {
   }
 
   const datos = await respuesta.json();
-  return datos.secure_url;
+  return datos.public_id; // ya no devolvemos una URL pública
+
 }

@@ -1,15 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   collection,
+  getDoc,
+  setDoc,
+  deleteDoc,
+  writeBatch,
+  serverTimestamp,
   getDocs,
   query,
   orderBy,
   doc,
-  updateDoc,
   increment,
+  where,
+  limit
 } from "firebase/firestore";
 import {
   Heart,
@@ -26,6 +33,7 @@ import {
   Music,
 } from "lucide-react";
 import { db } from "@/lib/firebase";
+import { useAuth } from "@/context/AuthContext";
 import BottomNav from "@/components/BottomNav";
 
 const DEDICATORIAS_DEMO = [
@@ -81,6 +89,22 @@ const DEDICATORIAS_DEMO = [
   },
 ];
 
+function tiempoRelativo(timestamp) {
+  if (!timestamp?.toDate) return "Ahora";
+  const fecha = timestamp.toDate();
+  const seg = Math.floor((Date.now() - fecha.getTime()) / 1000);
+
+  if (seg < 60) return "Ahora";
+  const min = Math.floor(seg / 60);
+  if (min < 60) return `Hace ${min} min`;
+  const horas = Math.floor(min / 60);
+  if (horas < 24) return `Hace ${horas} h`;
+  const dias = Math.floor(horas / 24);
+  if (dias < 7) return dias === 1 ? "Hace 1 día" : `Hace ${dias} días`;
+
+  return fecha.toLocaleDateString("es-ES", { day: "numeric", month: "short" });
+}
+
 const CATEGORIAS = [
   { id: "Todas", label: "Todas" },
   { id: "Amor", label: "Amor" },
@@ -91,17 +115,23 @@ const CATEGORIAS = [
 
 export default function MuroPublicoPage() {
   const [dedicatorias, setDedicatorias] = useState(DEDICATORIAS_DEMO);
+  const { user, loading } = useAuth();
   const [cargando, setCargando] = useState(true);
   const [categoriaActiva, setCategoriaActiva] = useState("Todas");
   const [likesDados, setLikesDados] = useState({});
   const [guardados, setGuardados] = useState({});
+  const router = useRouter();
+  const likesEnCurso = useRef(new Set());
+
 
   useEffect(() => {
     async function cargarDedicatorias() {
       try {
         const q = query(
           collection(db, "dedicatorias"),
-          orderBy("creadoEn", "desc")
+          where("publica", "==", true),
+          orderBy("creadoEn", "desc"),
+          limit(20)
         );
         const snapshot = await getDocs(q);
 
@@ -117,19 +147,19 @@ export default function MuroPublicoPage() {
               etiqueta: data.etiqueta || data.categoria || "Dedicatoria",
               destacada: Boolean(data.destacada),
               musica: data.musica || "",
-              tiempo: "Reciente",
+              tiempo: tiempoRelativo(data.creadoEn),
               mensaje: data.mensaje || "",
               fraseExtra: data.fraseExtra || null,
               albumPrivado: data.albumPrivado?.activo
                 ? {
-                    totalFotos:
-                      data.albumPrivado.totalFotos ||
-                      data.albumPrivado.fotos?.length ||
-                      0,
-                    desbloqueado: false,
-                    autorAlbum: data.remitente || "Autor",
-                    ruta: `/album/${d.id}`,
-                  }
+                  totalFotos:
+                    data.albumPrivado.totalFotos ||
+                    data.albumPrivado.fotos?.length ||
+                    0,
+                  desbloqueado: false,
+                  autorAlbum: data.remitente || "Autor",
+                  ruta: `/album/${d.id}`,
+                }
                 : null,
               remitente: data.remitente || "Anónimo",
               despedida: data.despedida || "Con cariño",
@@ -140,7 +170,10 @@ export default function MuroPublicoPage() {
               avatarColor: "bg-primary-fixed text-primary",
             };
           });
-          setDedicatorias([...reales, ...DEDICATORIAS_DEMO]);
+          const realesOrdenadas = [...reales].sort(
+            (a, b) => Number(b.destacada) - Number(a.destacada)
+          );
+          setDedicatorias([...realesOrdenadas, ...DEDICATORIAS_DEMO]);
         }
       } catch (err) {
         console.error("Error cargando dedicatorias de Firestore:", err);
@@ -152,32 +185,118 @@ export default function MuroPublicoPage() {
     cargarDedicatorias();
   }, []);
 
+  useEffect(() => {
+    if (!user) {
+      setLikesDados({});
+      return;
+    }
+    const reales = dedicatorias.filter((d) => !d.esDemo);
+    if (!reales.length) return;
+
+    Promise.all(
+      reales.map((d) => getDoc(doc(db, "dedicatorias", d.id, "likes", user.uid)))
+    )
+      .then((snaps) => {
+        const mapa = {};
+        snaps.forEach((s, i) => {
+          if (s.exists()) mapa[reales[i].id] = true;
+        });
+        setLikesDados(mapa);
+      })
+      .catch(console.error);
+  }, [user, dedicatorias.length]);
+
+  //efecto que carga lo que ya he guardado
+  useEffect(() => {
+  if (!user) {
+    setGuardados({});
+    return;
+  }
+  getDocs(collection(db, "users", user.uid, "guardadas"))
+    .then((snap) => {
+      const mapa = {};
+      snap.forEach((d) => {
+        mapa[d.id] = true;
+      });
+      setGuardados(mapa);
+    })
+    .catch(console.error);
+}, [user]);
+
+
   const dedicatoriasFiltradas =
     categoriaActiva === "Todas"
       ? dedicatorias
       : dedicatorias.filter((item) => item.categoria === categoriaActiva);
 
   const toggleLike = async (item) => {
+    if (!user) {
+      router.push("/perfil");
+      return;
+    }
+    if (likesEnCurso.current.has(item.id)) return; // evita doble toque
+
     const yaDado = Boolean(likesDados[item.id]);
-    const nuevoEstado = !yaDado;
+    const delta = yaDado ? -1 : 1;
 
-    setLikesDados((prev) => ({ ...prev, [item.id]: nuevoEstado }));
+    const aplicar = (d) =>
+      setDedicatorias((prev) =>
+        prev.map((x) => (x.id === item.id ? { ...x, likes: x.likes + d } : x))
+      );
 
-    if (!item.esDemo) {
-      try {
-        const ref = doc(db, "dedicatorias", item.id);
-        await updateDoc(ref, {
-          likes: increment(nuevoEstado ? 1 : -1),
-        });
-      } catch (err) {
-        console.error("Error actualizando like:", err);
+    // Actualización inmediata en pantalla
+    setLikesDados((prev) => ({ ...prev, [item.id]: !yaDado }));
+    aplicar(delta);
+
+    if (item.esDemo) return; // las demo solo viven en local
+
+    likesEnCurso.current.add(item.id);
+    try {
+      const dedRef = doc(db, "dedicatorias", item.id);
+      const likeRef = doc(db, "dedicatorias", item.id, "likes", user.uid);
+      const batch = writeBatch(db);
+
+      if (yaDado) {
+        batch.delete(likeRef);
+      } else {
+        batch.set(likeRef, { creadoEn: serverTimestamp() });
       }
+      batch.update(dedRef, { likes: increment(delta) });
+
+      await batch.commit();
+    } catch (err) {
+      console.error("Error actualizando like:", err);
+      // Si falla, deshacemos el cambio visual
+      setLikesDados((prev) => ({ ...prev, [item.id]: yaDado }));
+      aplicar(-delta);
+    } finally {
+      likesEnCurso.current.delete(item.id);
     }
   };
 
-  const toggleGuardar = (id) => {
-    setGuardados((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
+  const toggleGuardar = async (item) => {
+  if (!user) {
+    router.push("/perfil");
+    return;
+  }
+
+  const yaGuardado = Boolean(guardados[item.id]);
+  setGuardados((prev) => ({ ...prev, [item.id]: !yaGuardado }));
+
+  if (item.esDemo) return; // las demo solo viven en local
+
+  try {
+    const ref = doc(db, "users", user.uid, "guardadas", item.id);
+    if (yaGuardado) {
+      await deleteDoc(ref);
+    } else {
+      await setDoc(ref, { guardadoEn: serverTimestamp() });
+    }
+  } catch (err) {
+    console.error("Error al guardar:", err);
+    setGuardados((prev) => ({ ...prev, [item.id]: yaGuardado }));
+  }
+};
 
   const renderBadgeIcon = (categoria) => {
     if (categoria === "Amistad") return <Users className="w-3.5 h-3.5" />;
@@ -211,11 +330,11 @@ export default function MuroPublicoPage() {
               </Link>
 
               <Link
-                href="/album/elena-vault"
-                aria-label="Álbum destacado"
+                href="/perfil"
+                aria-label="Mi perfil"
                 className="w-9 h-9 rounded-full bg-primary-fixed text-primary font-serif text-xs font-bold flex items-center justify-center ring-2 ring-primary-fixed/70"
               >
-                DL
+                {(user?.displayName || "D").charAt(0).toUpperCase()}
               </Link>
             </div>
           </div>
@@ -229,11 +348,10 @@ export default function MuroPublicoPage() {
                   key={cat.id}
                   type="button"
                   onClick={() => setCategoriaActiva(cat.id)}
-                  className={`px-3.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider whitespace-nowrap transition-all ${
-                    activa
-                      ? "bg-primary text-on-primary shadow-sm"
-                      : "bg-surface-container-low text-on-surface-variant hover:text-primary"
-                  }`}
+                  className={`px-3.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider whitespace-nowrap transition-all ${activa
+                    ? "bg-primary text-on-primary shadow-sm"
+                    : "bg-surface-container-low text-on-surface-variant hover:text-primary"
+                    }`}
                 >
                   {cat.label}
                 </button>
@@ -248,17 +366,16 @@ export default function MuroPublicoPage() {
         <div className="flex flex-col gap-6">
           {dedicatoriasFiltradas.map((item) => {
             const dioLike = Boolean(likesDados[item.id]);
-            const totalLikes = item.likes + (dioLike ? 1 : 0);
+            const totalLikes = item.likes;
             const estaGuardado = Boolean(guardados[item.id]);
 
             return (
               <article
                 key={item.id}
-                className={`relative rounded-2xl bg-surface-container-lowest p-5 sm:p-6 overflow-hidden transition-all duration-300 ${
-                  item.destacada
-                    ? "shadow-[0_8px_30px_rgba(100,40,50,0.06)]"
-                    : "shadow-[0_4px_20px_rgba(100,40,50,0.03)]"
-                }`}
+                className={`relative rounded-2xl bg-surface-container-lowest p-5 sm:p-6 overflow-hidden transition-all duration-300 ${item.destacada
+                  ? "shadow-[0_8px_30px_rgba(100,40,50,0.06)]"
+                  : "shadow-[0_4px_20px_rgba(100,40,50,0.03)]"
+                  }`}
               >
                 {item.destacada && (
                   <>
@@ -269,11 +386,10 @@ export default function MuroPublicoPage() {
 
                 <div className="flex items-center justify-between gap-2 mb-3.5 relative z-10">
                   <div
-                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${
-                      item.destacada
-                        ? "bg-secondary-fixed text-on-secondary-fixed shadow-xs"
-                        : "bg-primary-fixed/70 text-primary"
-                    }`}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${item.destacada
+                      ? "bg-secondary-fixed text-on-secondary-fixed shadow-xs"
+                      : "bg-primary-fixed/70 text-primary"
+                      }`}
                   >
                     {item.destacada ? (
                       <Sparkles className="w-3.5 h-3.5 text-secondary" />
@@ -395,11 +511,10 @@ export default function MuroPublicoPage() {
                     <button
                       type="button"
                       onClick={() => toggleLike(item)}
-                      className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-90 ${
-                        dioLike
-                          ? "bg-primary text-on-primary shadow-xs"
-                          : "bg-surface-container-low text-primary hover:bg-primary-fixed/60"
-                      }`}
+                      className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-all active:scale-90 ${dioLike
+                        ? "bg-primary text-on-primary shadow-xs"
+                        : "bg-surface-container-low text-primary hover:bg-primary-fixed/60"
+                        }`}
                     >
                       <Heart
                         className={`w-4 h-4 ${dioLike ? "fill-current" : ""}`}
@@ -427,17 +542,15 @@ export default function MuroPublicoPage() {
                     <button
                       type="button"
                       aria-label="Guardar dedicatoria"
-                      onClick={() => toggleGuardar(item.id)}
-                      className={`w-8 h-8 rounded-full bg-surface-container-low flex items-center justify-center transition-colors ${
-                        estaGuardado
-                          ? "text-secondary"
-                          : "text-on-surface-variant hover:text-secondary"
-                      }`}
+                      onClick={() => toggleGuardar(item)}
+                      className={`w-8 h-8 rounded-full bg-surface-container-low flex items-center justify-center transition-colors ${estaGuardado
+                        ? "text-secondary"
+                        : "text-on-surface-variant hover:text-secondary"
+                        }`}
                     >
                       <Bookmark
-                        className={`w-3.5 h-3.5 ${
-                          estaGuardado ? "fill-current" : ""
-                        }`}
+                        className={`w-3.5 h-3.5 ${estaGuardado ? "fill-current" : ""
+                          }`}
                       />
                     </button>
                   </div>
