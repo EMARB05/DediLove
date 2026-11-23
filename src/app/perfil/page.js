@@ -5,6 +5,7 @@ import { db } from "../../lib/firebase";
 import { useAuth } from "../../context/AuthContext";
 import BottomNav from "../../components/BottomNav";
 import { Trash2 } from "lucide-react";
+import { ESTILOS_TEXTO, FONDOS_PAPEL } from "../lib/estilos";
 
 const TABS = [
     { id: "creadas", icon: "edit", label: "Mis dedicatorias" },
@@ -32,7 +33,7 @@ function TarjetaDedicatoria({ d, onEliminar }) {
         }
     };
     return (
-        <article className="w-full bg-surface-container-lowest rounded-lg p-space-md shadow-[0_4px_20px_rgba(100,40,50,0.04)]">
+        <article className={`w-full ${FONDOS_PAPEL[d.acabadoPapel] || FONDOS_PAPEL["rose-silk"]} rounded-4xl p-space-md shadow-[0_4px_20px_rgba(100,40,50,0.04)]`}>
             <div className="flex items-center gap-1.5 mb-space-sm">
                 <span className="px-2.5 py-0.5 rounded-full bg-primary-fixed text-primary font-label-caps text-label-caps">
                     {d.categoria}
@@ -48,7 +49,9 @@ function TarjetaDedicatoria({ d, onEliminar }) {
                 Para {d.destinatario}
             </h2>
 
-            <p className="font-dedication-quote text-dedication-quote text-on-surface-variant italic mb-space-md line-clamp-3">
+            <p className={`text-dedication-quote text-on-surface-variant ${ESTILOS_TEXTO[d.estiloTipografia] || ESTILOS_TEXTO.editorial
+                } mb-space-md line-clamp-3`}
+            >
                 “{d.mensaje}”
             </p>
 
@@ -163,7 +166,19 @@ export default function PerfilPage() {
     }, [user]);
 
     const eliminarDedicatoria = async (id) => {
-        await deleteDoc(doc(db, "dedicatorias", id));
+        const idToken = await user.getIdToken();
+        const res = await fetch("/api/dedicatoria/borrar", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${idToken}`,
+            },
+            body: JSON.stringify({ dedicatoriaId: id }),
+        });
+        if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || "No se pudo eliminar");
+        }
         setCreadas((prev) => prev.filter((d) => d.id !== id));
     };
 
@@ -294,8 +309,8 @@ export default function PerfilPage() {
                                 <p className="text-on-surface-variant font-body-sm">Cargando…</p>
                             ) : visibles.length ? (
                                 visibles.map((d) => <TarjetaDedicatoria key={d.id}
-                                 d={d}
-                                 onEliminar={tab === "creadas" ? eliminarDedicatoria : undefined} />)
+                                    d={d}
+                                    onEliminar={tab === "creadas" ? eliminarDedicatoria : undefined} />)
                             ) : (
                                 <p className="text-center text-on-surface-variant font-body-sm py-space-lg">
                                     {busqueda

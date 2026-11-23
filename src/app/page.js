@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { ESTILOS_TEXTO, FONDOS_PAPEL } from "../lib/estilos";
 import {
   collection,
   getDoc,
@@ -168,6 +169,8 @@ export default function MuroPublicoPage() {
               comentarios:
                 typeof data.comentarios === "number" ? data.comentarios : 0,
               avatarColor: "bg-primary-fixed text-primary",
+              estiloTipografia: data.estiloTipografia || "editorial",
+              acabadoPapel: data.acabadoPapel || "rose-silk",
             };
           });
           const realesOrdenadas = [...reales].sort(
@@ -366,13 +369,15 @@ export default function MuroPublicoPage() {
         <div className="flex flex-col gap-6">
           {dedicatoriasFiltradas.map((item) => {
             const dioLike = Boolean(likesDados[item.id]);
+            const fondo = FONDOS_PAPEL[item.acabadoPapel] || FONDOS_PAPEL["rose-silk"];
+            const claseTexto = ESTILOS_TEXTO[item.estiloTipografia] || ESTILOS_TEXTO.editorial;
             const totalLikes = item.likes;
             const estaGuardado = Boolean(guardados[item.id]);
 
             return (
               <article
                 key={item.id}
-                className={`relative rounded-2xl bg-surface-container-lowest p-5 sm:p-6 overflow-hidden transition-all duration-300 ${item.destacada
+                className={`relative rounded-2xl ${fondo} p-5 sm:p-6 overflow-hidden transition-all duration-300 ${item.destacada
                   ? "shadow-[0_8px_30px_rgba(100,40,50,0.06)]"
                   : "shadow-[0_4px_20px_rgba(100,40,50,0.03)]"
                   }`}
@@ -433,7 +438,7 @@ export default function MuroPublicoPage() {
                   >
                     “
                   </span>
-                  <p className="font-serif text-[18px] sm:text-[20px] leading-[31px] text-on-surface font-normal pl-4">
+                  <p className={`${claseTexto} text-[18px] sm:text-[20px] leading-[31px] text-on-surface pl-4`}>
                     {item.mensaje}
                   </p>
                 </div>
