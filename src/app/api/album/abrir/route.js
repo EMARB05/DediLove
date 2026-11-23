@@ -15,6 +15,7 @@ cloudinary.config({
 });
 
 export async function POST(request) {
+  try{
   const { dedicatoriaId, contrasena } = await request.json().catch(() => ({}));
   if (!dedicatoriaId) {
     return NextResponse.json({ error: "Datos no válidos" }, { status: 400 });
@@ -68,4 +69,12 @@ export async function POST(request) {
     permiteAportes: Boolean(ded.albumPrivado?.permiteAportes),
     limite: limiteFotos(ded),
   });
+}
+  catch(err){
+    console.error("Error en POST /api/album/abrir:", err);
+    return NextResponse.json(
+      { error: "Error interno del servidor al abrir el álbum" },
+      { status: 500 }
+    );
+  }
 }
