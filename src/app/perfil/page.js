@@ -10,6 +10,7 @@ import { Edit, Bookmark, Lock, Search } from "lucide-react";
 import { useTema } from "@/components/ProveedorTema";
 import { BotonModoNoche } from "@/components/BotonModoNoche";
 import Link from "next/link";
+import FooterLegal from "@/components/FooterLegal";
 
 const TABS = [
     { id: "creadas", icon: <Edit />, label: "Mis dedicatorias" },
@@ -518,8 +519,11 @@ export default function PerfilPage() {
                         )}
                     </div>
                 </div>
+                
             </main>
-            <BottomNav />
+             
+            <BottomNav/>
+            <FooterLegal/>
         </>
     );
 }

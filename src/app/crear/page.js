@@ -7,6 +7,7 @@ import { useTema } from "@/components/ProveedorTema";
 import { BotonModoNoche } from "@/components/BotonModoNoche";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import BotonSuscripcionPayPal from "@/components/BotonSuscripcionPayPal";
+import Link from "next/link";
 import logo from "./../../img/logo.png";
 import {
     ChevronLeft,
@@ -29,6 +30,7 @@ import {
 } from "lucide-react";
 import { db } from "@/lib/firebase";
 import { comprimirYSubirImagen } from "@/lib/cloudinary";
+import FooterLegal from "@/components/FooterLegal";
 
 const CATEGORIAS = [
     { id: "Amor", label: "Amor", simbolo: "♡" },
@@ -127,7 +129,7 @@ const ACABADOS_PAPEL = [
     },
 ];
 
-const MAX_FOTOS = 5;
+
 
 export default function EditorDedicatoriaPage() {
     const router = useRouter();
@@ -142,6 +144,7 @@ export default function EditorDedicatoriaPage() {
 
     // Conecta aquí el estado real de suscripción de tu usuario en Firestore
     const esPremium = esPremiumLocal || Boolean(user?.esPremium);
+    const MAX_FOTOS = esPremium ? 20 : 5;
 
     const [destinatario, setDestinatario] = useState("");
     const [categoria, setCategoria] = useState("Amor");
@@ -195,7 +198,7 @@ export default function EditorDedicatoriaPage() {
     const seleccionarAcabado = (acabado) => {
         if (!esPremium && acabado.id !== "blanco") {
             setErrorForm(
-                "Los acabados de papel personalizados son de DediLove Premium ($2.99/mes con PayPal). El fondo gratuito es blanco."
+                "Los acabados de papel personalizados son de DediLove Premium (€2.73/mes con PayPal). El fondo gratuito es blanco."
             );
             return;
         }
@@ -421,8 +424,8 @@ export default function EditorDedicatoriaPage() {
             {/* Encabezado superior fijo */}
             <header
                 className={`fixed top-0 w-full z-40 pt-safe backdrop-blur-xl transition-colors duration-300 ${modoNoche
-                        ? "bg-[#081024]/85 border-b border-indigo-400/15 shadow-[0_4px_20px_rgba(0,0,0,0.35)]"
-                        : "bg-surface/85 shadow-[0_1px_8px_rgba(0,0,0,0.04)]"
+                    ? "bg-[#081024]/85 border-b border-indigo-400/15 shadow-[0_4px_20px_rgba(0,0,0,0.35)]"
+                    : "bg-surface/85 shadow-[0_1px_8px_rgba(0,0,0,0.04)]"
                     }`}
             >
                 <div className="h-16 max-w-2xl mx-auto px-5 flex items-center justify-between">
@@ -432,17 +435,17 @@ export default function EditorDedicatoriaPage() {
                             aria-label="Volver"
                             onClick={() => router.back()}
                             className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${modoNoche
-                                    ? "text-slate-300 hover:text-rose-300 hover:bg-slate-800/80"
-                                    : "text-on-surface-variant hover:text-primary hover:bg-surface-container-low"
+                                ? "text-slate-300 hover:text-rose-300 hover:bg-slate-800/80"
+                                : "text-on-surface-variant hover:text-primary hover:bg-surface-container-low"
                                 }`}
                         >
                             <ChevronLeft className="w-5 h-5" />
                         </button>
-                        <div className="w-7 h-7 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+                        <div className="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
                             <img
                                 src={logo?.src}
                                 alt="DediLove"
-                                className="w-14 h-10 fill-primary"
+                                className="w-14 h-9 fill-primary"
                             />
                         </div>
                         <h1
@@ -469,8 +472,8 @@ export default function EditorDedicatoriaPage() {
                 <div className="flex items-center justify-between py-1.5 mb-3">
                     <div
                         className={`flex items-center gap-2 px-3 py-1 rounded-full transition-colors ${modoNoche
-                                ? "bg-slate-900/80 border border-indigo-400/15"
-                                : "bg-surface-container-low shadow-2xs"
+                            ? "bg-slate-900/80 border border-indigo-400/15"
+                            : "bg-surface-container-low shadow-2xs"
                             }`}
                     >
 
@@ -525,8 +528,8 @@ export default function EditorDedicatoriaPage() {
                     {/* Destinatario */}
                     <div
                         className={`p-5 rounded-2xl flex flex-col gap-2 transition-colors ${modoNoche
-                                ? "bg-slate-900/80 border border-indigo-400/15 shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
-                                : "bg-surface-container-lowest shadow-xs"
+                            ? "bg-slate-900/80 border border-indigo-400/15 shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
+                            : "bg-surface-container-lowest shadow-xs"
                             }`}
                     >
                         <label
@@ -554,8 +557,8 @@ export default function EditorDedicatoriaPage() {
                                 onChange={(e) => setDestinatario(e.target.value)}
                                 placeholder="¿Para quién es esta dedicatoria? Ej. Elena, Mamá..."
                                 className={`w-full bg-transparent border-0 outline-none text-base sm:text-lg ${modoNoche
-                                        ? "text-slate-100 placeholder:text-slate-400/70"
-                                        : "text-on-surface placeholder:text-on-surface-variant/45"
+                                    ? "text-slate-100 placeholder:text-slate-400/70"
+                                    : "text-on-surface placeholder:text-on-surface-variant/45"
                                     }`}
                             />
                         </div>
@@ -578,10 +581,10 @@ export default function EditorDedicatoriaPage() {
                                         type="button"
                                         onClick={() => setCategoria(cat.id)}
                                         className={`px-4 py-2 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 shrink-0 ${activa
-                                                ? "bg-primary text-on-primary shadow-sm"
-                                                : modoNoche
-                                                    ? "bg-slate-900/80 text-slate-300 border border-indigo-400/15 hover:text-rose-300"
-                                                    : "bg-surface-container text-on-surface-variant hover:bg-surface-container-high shadow-2xs"
+                                            ? "bg-primary text-on-primary shadow-sm"
+                                            : modoNoche
+                                                ? "bg-slate-900/80 text-slate-300 border border-indigo-400/15 hover:text-rose-300"
+                                                : "bg-surface-container text-on-surface-variant hover:bg-surface-container-high shadow-2xs"
                                             }`}
                                     >
                                         <span>{cat.label}</span>
@@ -595,8 +598,8 @@ export default function EditorDedicatoriaPage() {
                     {/* Lienzo de la carta */}
                     <div
                         className={`${acabadoPapel.fondoTarjeta} rounded-2xl p-5 flex flex-col relative overflow-hidden transition-all duration-300 ${modoNoche
-                                ? "ring-1 ring-indigo-300/20 shadow-[0_14px_34px_rgba(0,0,0,0.5)]"
-                                : "shadow-md border border-slate-200/70"
+                            ? "ring-1 ring-indigo-300/20 shadow-[0_14px_34px_rgba(0,0,0,0.5)]"
+                            : "shadow-md border border-slate-200/70"
                             }`}
                     >
                         <div className="absolute -right-6 -bottom-6 w-32 h-32 rounded-full bg-primary-fixed/25 pointer-events-none blur-2xl" />
@@ -658,8 +661,8 @@ export default function EditorDedicatoriaPage() {
                     {/* Firma del remitente */}
                     <div
                         className={`p-5 rounded-2xl flex flex-col gap-2 transition-colors ${modoNoche
-                                ? "bg-slate-900/80 border border-indigo-400/15 shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
-                                : "bg-surface-container-lowest shadow-xs"
+                            ? "bg-slate-900/80 border border-indigo-400/15 shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
+                            : "bg-surface-container-lowest shadow-xs"
                             }`}
                     >
                         <label
@@ -687,8 +690,8 @@ export default function EditorDedicatoriaPage() {
                                 onChange={(e) => setRemitente(e.target.value)}
                                 placeholder="Tu nombre o apodo (ej. Julián, Anónimo)"
                                 className={`w-full bg-transparent border-0 outline-none text-base sm:text-lg ${modoNoche
-                                        ? "text-slate-100 placeholder:text-slate-400/70"
-                                        : "text-on-surface placeholder:text-on-surface-variant/45"
+                                    ? "text-slate-100 placeholder:text-slate-400/70"
+                                    : "text-on-surface placeholder:text-on-surface-variant/45"
                                     }`}
                             />
                         </div>
@@ -759,18 +762,18 @@ export default function EditorDedicatoriaPage() {
                                             disabled={!esPremium}
                                             onClick={() => seleccionarTipografia(opcion)}
                                             className={`p-2.5 rounded-xl flex flex-col items-center justify-center shadow-2xs text-center transition-all ${activa
-                                                    ? "bg-primary text-on-primary"
-                                                    : !esPremium
-                                                        ? "bg-surface-container/70 text-on-surface-variant/60 cursor-not-allowed"
-                                                        : "bg-surface-container text-on-surface-variant hover:bg-surface-container-high"
+                                                ? "bg-primary text-on-primary"
+                                                : !esPremium
+                                                    ? "bg-surface-container/70 text-on-surface-variant/60 cursor-not-allowed"
+                                                    : "bg-surface-container text-on-surface-variant hover:bg-surface-container-high"
                                                 }`}
                                         >
                                             <span
                                                 className={`text-sm ${opcion.id === "romana"
-                                                        ? "font-serif italic"
-                                                        : opcion.id === "editorial"
-                                                            ? "font-serif"
-                                                            : "font-sans font-semibold"
+                                                    ? "font-serif italic"
+                                                    : opcion.id === "editorial"
+                                                        ? "font-serif"
+                                                        : "font-sans font-semibold"
                                                     }`}
                                             >
                                                 {opcion.nombre}
@@ -831,8 +834,8 @@ export default function EditorDedicatoriaPage() {
                                             </div>
                                             <span
                                                 className={`text-[10px] font-bold uppercase tracking-wider text-center ${seleccionado
-                                                        ? "text-on-surface"
-                                                        : "text-on-surface-variant"
+                                                    ? "text-on-surface"
+                                                    : "text-on-surface-variant"
                                                     }`}
                                             >
                                                 {acabado.nombre}
@@ -863,8 +866,8 @@ export default function EditorDedicatoriaPage() {
                                     aria-label="Activar álbum privado"
                                     onClick={() => setAlbumActivo((prev) => !prev)}
                                     className={`w-12 h-6 rounded-full p-0.5 flex items-center transition-colors shrink-0 ${albumActivo
-                                            ? "bg-primary justify-end"
-                                            : "bg-surface-container-highest justify-start"
+                                        ? "bg-primary justify-end"
+                                        : "bg-surface-container-highest justify-start"
                                         }`}
                                 >
                                     <span className="w-5 h-5 rounded-full bg-white shadow-xs" />
@@ -954,7 +957,15 @@ export default function EditorDedicatoriaPage() {
                                         <span>Permitir que otras personas aporten fotos</span>
                                     </label>
                                 </div>
+
                             )}
+                            <p className="text-xs opacity-70  text-on-surface">
+                                Asegúrate de contar con permiso para las fotos que subas y de cumplir los{" "}
+                                <Link href="/legal/terminos" target="_blank" className="underline">
+                                    Términos de Uso
+                                </Link>
+                                .
+                            </p>
                         </div>
                     </div>
 
@@ -964,8 +975,8 @@ export default function EditorDedicatoriaPage() {
                             type="button"
                             onClick={guardarBorrador}
                             className={`inline-flex items-center gap-2 px-4 py-3 rounded-full text-xs font-semibold transition-colors ${modoNoche
-                                    ? "bg-slate-900/80 text-slate-200 border border-indigo-400/15 hover:bg-slate-800"
-                                    : "bg-surface-container text-on-surface-variant hover:bg-surface-container-high"
+                                ? "bg-slate-900/80 text-slate-200 border border-indigo-400/15 hover:bg-slate-800"
+                                : "bg-surface-container text-on-surface-variant hover:bg-surface-container-high"
                                 }`}
                         >
                             <Bookmark className="w-4 h-4" />
@@ -991,19 +1002,21 @@ export default function EditorDedicatoriaPage() {
                         </button>
                     </div>
                 </div>
+                
             </main>
+            <FooterLegal/>
             {modalPremiumAbierto && !esPremium && (
                 <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
                     <div
                         className={`w-full max-w-md rounded-3xl p-6 flex flex-col gap-4 shadow-xl ${modoNoche
-                                ? "bg-slate-900 text-slate-100 border border-indigo-400/20"
-                                : "bg-surface text-on-surface"
+                            ? "bg-slate-900 text-slate-100 border border-indigo-400/20"
+                            : "bg-surface text-on-surface"
                             }`}
                     >
                         <div className="flex items-start justify-between gap-3">
                             <div>
                                 <span className="text-[11px] font-bold uppercase tracking-wider text-secondary">
-                                    Suscripción Mensual · $2.99/mes
+                                    Suscripción Mensual · €2.73/mes
                                 </span>
                                 <h4 className="font-serif text-2xl font-semibold mt-0.5">
                                     Pásate a DediLove Premium
@@ -1026,8 +1039,10 @@ export default function EditorDedicatoriaPage() {
                         </ul>
 
                         {/* Aquí montas <PayPalButtons /> con createSubscription y onApprove */}
+
                         <div className="rounded-2xl p-3 bg-white text-slate-900">
                             {user?.uid ? (
+
                                 <BotonSuscripcionPayPal
                                     userId={user.uid}
                                     onSuccess={async () => {
@@ -1035,12 +1050,24 @@ export default function EditorDedicatoriaPage() {
                                         setModalPremiumAbierto(false);
                                     }}
                                 />
+
                             ) : (
                                 <p className="text-center text-xs font-medium text-amber-700">
                                     Inicia sesión primero para activar tu suscripción.
                                 </p>
                             )}
                         </div>
+                        <p className="text-xs opacity-75 leading-relaxed">
+                            Suscripción recurrente gestionada con PayPal. Al continuar, aceptas los{" "}
+                            <Link href="/legal/terminos" target="_blank" className="underline">
+                                Términos y Condiciones
+                            </Link>{" "}
+                            y la{" "}
+                            <Link href="/legal/privacidad" target="_blank" className="underline">
+                                Política de Privacidad
+                            </Link>
+                            .
+                        </p>
                     </div>
                 </div>
             )}

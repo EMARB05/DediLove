@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import { db } from "@/lib/firebase";
 import BottomNav from "@/components/BottomNav";
+import FooterLegal from "@/components/FooterLegal";
 
 const ALBUM_DEMO_ELENA = {
     titulo: "Siete Años de Magia Silenciosa",
@@ -766,11 +767,11 @@ function AlbumPrivadoContent() {
                                 <ArrowLeft className="w-5 h-5" />
                             </button>
 
-                            <div className="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary shrink-0">
+                            <div className="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary shrink-0">
                                 <img
                                     src={logo?.src}
                                     alt="DediLove"
-                                    className="w-6 h-6 object-contain"
+                                    className="w-10 h-10 object-contain rounded-4xl"
                                 />
                             </div>
 
@@ -1464,7 +1465,9 @@ function AlbumPrivadoContent() {
                         </div>
                     </div>
                 )}
+              
             </main>
+             <FooterLegal/>
 
 
         </div>

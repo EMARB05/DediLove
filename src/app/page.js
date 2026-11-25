@@ -39,6 +39,7 @@ import {
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import BottomNav from "@/components/BottomNav";
+import FooterLegal from "@/components/FooterLegal";
 
 const DEDICATORIAS_DEMO = [
   {
@@ -382,8 +383,8 @@ export default function MuroPublicoPage() {
         <div className="h-28 max-w-2xl mx-auto px-5 flex flex-col justify-between pb-2">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary shadow-xs">
-                <img src={Logo?.src} className="w-12 h-10 " />
+              <div className="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary shadow-xs">
+                <img src={Logo?.src} className="w-10 h-10 rounded-4xl " />
               </div>
               <span className="font-serif text-[22px] leading-[30px] text-primary font-semibold tracking-tight">
                 DediLove
@@ -392,18 +393,11 @@ export default function MuroPublicoPage() {
 
             <div className="flex items-center gap-2.5">
               <BotonModoNoche className="h-10 px-3" />
-              <Link
-                href="/crear"
-                className="inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-full bg-primary-container text-on-primary text-xs font-semibold tracking-wide shadow-[0_4px_16px_rgba(225,29,72,0.2)] hover:opacity-95 active:scale-95 transition-all"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Dedicar</span>
-              </Link>
 
               <Link
                 href="/perfil"
                 aria-label="Mi perfil"
-                className="w-9 h-9 rounded-full bg-primary-fixed text-primary font-serif text-xs font-bold flex items-center justify-center ring-2 ring-primary-fixed/70"
+                className="w-10 h-10 rounded-full bg-primary-fixed text-primary font-serif text-xs font-bold flex items-center justify-center ring-2 ring-primary-fixed/70"
               >
                 {(user?.displayName || "D").charAt(0).toUpperCase()}
               </Link>
@@ -663,7 +657,11 @@ export default function MuroPublicoPage() {
             DediLove • Recuerdos vivos
           </p>
         </div>
+       <FooterLegal/>
       </main>
+      
+
+
 
       <BottomNav />
     </div>

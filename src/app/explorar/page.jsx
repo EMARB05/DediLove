@@ -39,6 +39,7 @@ import { ESTILOS_TEXTO, FONDOS_PAPEL } from "@/lib/estilos";
 import BottomNav from "@/components/BottomNav";
 import { useTema } from "@/components/ProveedorTema";
 import { BotonModoNoche } from "@/components/BotonModoNoche";
+import FooterLegal from "@/components/FooterLegal";
 const CATEGORIAS = [
   { id: "Todas", label: "Todas" },
   { id: "Destacadas", label: "Destacadas" },
@@ -306,8 +307,8 @@ export default function ExplorarPage() {
     >
       <div className="h-16 max-w-2xl mx-auto px-5 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary shadow-xs">
-            <img src={logo?.src} className="w-12 h-10 fill-primary" />
+          <div className="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary shadow-xs">
+            <img src={logo?.src} className="w-12 h-10 fill-primary rounded-4xl" />
           </div>
           <span className="font-serif text-[22px] leading-[30px] text-primary font-semibold tracking-tight">
             Explorar
@@ -316,14 +317,6 @@ export default function ExplorarPage() {
 
         <div className="flex items-center gap-2">
           <BotonModoNoche className="h-9 px-3" />
-
-          <Link
-            href="/crear"
-            className="inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-full bg-primary-container text-on-primary text-xs font-semibold shadow-[0_4px_16px_rgba(225,29,72,0.2)] hover:opacity-95 transition-all"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Dedicar</span>
-          </Link>
         </div>
       </div>
     </header>
@@ -697,7 +690,9 @@ export default function ExplorarPage() {
             })
           )}
         </section>
+          <FooterLegal/>
       </main>
+      
 
       <BottomNav />
     </div>

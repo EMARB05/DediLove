@@ -31,13 +31,38 @@ export async function POST(request) {
   }
 
   const ded = snap.data();
-  const limite = limiteFotos(ded);
+  const userSnap = await adminDb.collection("usuarios").doc(user.uid).get();
+  const esUsuarioPremium =
+    Boolean(userSnap.data()?.esPremium) || Boolean(ded.premium);
+
+  const limite = limiteFotos({ ...ded, premium: esUsuarioPremium });
   if (fotos.length > limite) {
     return NextResponse.json(
       { error: `El álbum admite como máximo ${limite} fotos` },
       { status: 400 }
     );
   }
+
+  // Cupo de álbumes gratuitos por usuario
+  if (!esUsuarioPremium) {
+    const otros = await adminDb
+      .collection("dedicatorias")
+      .where("autorId", "==", user.uid)
+      .where("albumPrivado.activo", "==", true)
+      .get();
+    const gratisUsados = otros.docs.filter(
+      (d) => d.id !== dedicatoriaId && !d.data().premium
+    ).length;
+    if (gratisUsados >= MAX_ALBUMES_GRATIS) {
+      return NextResponse.json(
+        {
+          error: `Ya tienes ${MAX_ALBUMES_GRATIS} álbumes gratuitos. Elimina uno o pasa a premium para crear más.`,
+        },
+        { status: 403 }
+      );
+    }
+  }
+  
 
   // Cupo de álbumes gratuitos por usuario
   if (!ded.premium) {
@@ -83,6 +108,7 @@ export async function POST(request) {
   });
 
   await ref.update({
+    premium: esUsuarioPremium,
     albumPrivado: {
       activo: true,
       totalFotos: fotos.length,
