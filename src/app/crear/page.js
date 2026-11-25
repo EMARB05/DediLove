@@ -187,7 +187,7 @@ export default function EditorDedicatoriaPage() {
     const seleccionarTipografia = (opcion) => {
         if (!esPremium) {
             setErrorForm(
-                "Elegir estilos de letra es exclusivo de DediLove Premium ($2.99/mes con PayPal)."
+                "Elegir estilos de letra es exclusivo de DediLove Premium ($2.73/mes con PayPal)."
             );
             return;
         }
@@ -713,13 +713,13 @@ export default function EditorDedicatoriaPage() {
                                 <p className="text-xs sm:text-sm text-on-surface-variant mt-0.5">
                                     {esPremium
                                         ? "Tienes desbloqueadas las tipografías, papeles y álbum privado."
-                                        : "Desbloquea fuentes y acabados de papel por $2.99/mes con PayPal."}
+                                        : "Desbloquea fuentes y acabados de papel por €2.73/mes con PayPal."}
                                 </p>
                             </div>
 
                             <div className="flex flex-col items-end gap-2 shrink-0">
                                 <span className="px-3 py-1 rounded-full bg-secondary text-on-secondary text-xs font-bold shadow-xs whitespace-nowrap">
-                                    $2.99/mes
+                                    €2.73/mes
                                 </span>
 
                                 {!esPremium && (
