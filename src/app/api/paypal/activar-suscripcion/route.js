@@ -16,6 +16,13 @@ async function getAccessToken(baseUrl) {
   }
 
   const auth = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+  console.log("PayPal env check:", {
+  mode: process.env.PAYPAL_MODE,
+  baseUrl,
+  clientIdStart: clientId.slice(0, 8),
+  clientIdEnd: clientId.slice(-6),
+  secretLength: clientSecret.length,
+});
   const res = await fetch(`${baseUrl}/v1/oauth2/token`, {
     method: "POST",
     headers: {
@@ -25,6 +32,7 @@ async function getAccessToken(baseUrl) {
     body: "grant_type=client_credentials",
     cache: "no-store",
   });
+  
 
   if (!res.ok) {
     const text = await res.text();

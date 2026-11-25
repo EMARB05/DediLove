@@ -187,7 +187,7 @@ export default function EditorDedicatoriaPage() {
     const seleccionarTipografia = (opcion) => {
         if (!esPremium) {
             setErrorForm(
-                "Elegir estilos de letra es exclusivo de DediLove Premium ($2.73/mes con PayPal)."
+                "Elegir estilos de letra es exclusivo de DediLove Premium (€2.73/mes con PayPal)."
             );
             return;
         }
