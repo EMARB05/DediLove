@@ -167,8 +167,8 @@ function AlbumPrivadoContent() {
     const params = useParams();
     const router = useRouter();
     const albumId = Array.isArray(params?.id) ? params.id[0] : params?.id;
-    
-    const  {modoNoche} = useTema();
+
+    const { modoNoche } = useTema();
     const [album, setAlbum] = useState(null);
     const [cargando, setCargando] = useState(true);
     const [desbloqueado, setDesbloqueado] = useState(false);
@@ -196,231 +196,231 @@ function AlbumPrivadoContent() {
     const [notasDesplegadas, setNotasDesplegadas] = useState(true);
     const [descargandoPdf, setDescargandoPdf] = useState(false);
 
-  const descargarAlbumPdf = async () => {
-  if (!album || descargandoPdf) return;
-  setDescargandoPdf(true);
+    const descargarAlbumPdf = async () => {
+        if (!album || descargandoPdf) return;
+        setDescargandoPdf(true);
 
-  try {
-    const docPdf = new jsPDF({ unit: "pt", format: "a4" });
-    const pageWidth = docPdf.internal.pageSize.getWidth();
-    const pageHeight = docPdf.internal.pageSize.getHeight();
-    const margin = 48;
-    const maxWidth = pageWidth - margin * 2;
+        try {
+            const docPdf = new jsPDF({ unit: "pt", format: "a4" });
+            const pageWidth = docPdf.internal.pageSize.getWidth();
+            const pageHeight = docPdf.internal.pageSize.getHeight();
+            const margin = 48;
+            const maxWidth = pageWidth - margin * 2;
 
-    // Cargamos una sola vez el fondo personalizado del álbum si existe
-    const fondoInfo = album.fondoUrl
-      ? await cargarImagenAjustada(album.fondoUrl, pageWidth, pageHeight)
-      : null;
+            // Cargamos una sola vez el fondo personalizado del álbum si existe
+            const fondoInfo = album.fondoUrl
+                ? await cargarImagenAjustada(album.fondoUrl, pageWidth, pageHeight)
+                : null;
 
-    const COLOR_FONDO_RESPALDO = [255, 248, 246]; // #FFF8F6 si no hay fondoUrl
-    const COLOR_TARJETA = [255, 255, 255];
-    const COLOR_ACENTO = [219, 68, 102];
-    const COLOR_BORDE = [242, 214, 221];
-    const COLOR_TEXTO = [38, 28, 32];
-    const COLOR_SUAVE = [125, 105, 112];
+            const COLOR_FONDO_RESPALDO = [255, 248, 246]; // #FFF8F6 si no hay fondoUrl
+            const COLOR_TARJETA = [255, 255, 255];
+            const COLOR_ACENTO = [219, 68, 102];
+            const COLOR_BORDE = [242, 214, 221];
+            const COLOR_TEXTO = [38, 28, 32];
+            const COLOR_SUAVE = [125, 105, 112];
 
-    const decorarPagina = (numPagina) => {
-      // Base suave por si el fondo tiene transparencia o no existe
-      docPdf.setFillColor(...COLOR_FONDO_RESPALDO);
-      docPdf.rect(0, 0, pageWidth, pageHeight, "F");
+            const decorarPagina = (numPagina) => {
+                // Base suave por si el fondo tiene transparencia o no existe
+                docPdf.setFillColor(...COLOR_FONDO_RESPALDO);
+                docPdf.rect(0, 0, pageWidth, pageHeight, "F");
 
-      if (fondoInfo?.dataUrl) {
-        const formatoFondo = fondoInfo.dataUrl.includes("image/png") ? "PNG" : "JPEG";
-        const opacidadFondo = new docPdf.GState({ opacity: 0.18 });
-        const opacidadNormal = new docPdf.GState({ opacity: 1 });
+                if (fondoInfo?.dataUrl) {
+                    const formatoFondo = fondoInfo.dataUrl.includes("image/png") ? "PNG" : "JPEG";
+                    const opacidadFondo = new docPdf.GState({ opacity: 0.18 });
+                    const opacidadNormal = new docPdf.GState({ opacity: 1 });
 
-        docPdf.setGState(opacidadFondo);
-        // Cubre toda la hoja manteniendo proporción centrada
-        const escala = Math.max(pageWidth / fondoInfo.ancho, pageHeight / fondoInfo.alto);
-        const wFondo = fondoInfo.ancho * escala;
-        const hFondo = fondoInfo.alto * escala;
-        const xFondo = (pageWidth - wFondo) / 2;
-        const yFondo = (pageHeight - hFondo) / 2;
+                    docPdf.setGState(opacidadFondo);
+                    // Cubre toda la hoja manteniendo proporción centrada
+                    const escala = Math.max(pageWidth / fondoInfo.ancho, pageHeight / fondoInfo.alto);
+                    const wFondo = fondoInfo.ancho * escala;
+                    const hFondo = fondoInfo.alto * escala;
+                    const xFondo = (pageWidth - wFondo) / 2;
+                    const yFondo = (pageHeight - hFondo) / 2;
 
-        docPdf.addImage(
-          fondoInfo.dataUrl,
-          formatoFondo,
-          xFondo,
-          yFondo,
-          wFondo,
-          hFondo,
-          undefined,
-          "FAST"
-        );
-        docPdf.setGState(opacidadNormal);
-      }
+                    docPdf.addImage(
+                        fondoInfo.dataUrl,
+                        formatoFondo,
+                        xFondo,
+                        yFondo,
+                        wFondo,
+                        hFondo,
+                        undefined,
+                        "FAST"
+                    );
+                    docPdf.setGState(opacidadNormal);
+                }
 
-      // Marco interior fino
-      docPdf.setDrawColor(...COLOR_BORDE);
-      docPdf.setLineWidth(1);
-      docPdf.roundedRect(24, 24, pageWidth - 48, pageHeight - 48, 14, 14, "S");
+                // Marco interior fino
+                docPdf.setDrawColor(...COLOR_BORDE);
+                docPdf.setLineWidth(1);
+                docPdf.roundedRect(24, 24, pageWidth - 48, pageHeight - 48, 14, 14, "S");
 
-      // Pie de página
-      docPdf.setFont("helvetica", "normal");
-      docPdf.setFontSize(8.5);
-      docPdf.setTextColor(...COLOR_SUAVE);
-      docPdf.text(
-        `Dedilove  •  Recuerdo privado  •  Página ${numPagina}`,
-        pageWidth / 2,
-        pageHeight - 34,
-        { align: "center" }
-      );
-    };
+                // Pie de página
+                docPdf.setFont("helvetica", "normal");
+                docPdf.setFontSize(8.5);
+                docPdf.setTextColor(...COLOR_SUAVE);
+                docPdf.text(
+                    `Dedilove  •  Recuerdo privado  •  Página ${numPagina}`,
+                    pageWidth / 2,
+                    pageHeight - 34,
+                    { align: "center" }
+                );
+            };
 
-    let paginaActual = 1;
-    decorarPagina(paginaActual);
-    let y = 76;
+            let paginaActual = 1;
+            decorarPagina(paginaActual);
+            let y = 76;
 
-    const nuevaPaginaSiNoCabe = (altoNecesario) => {
-      if (y + altoNecesario > pageHeight - 58) {
-        docPdf.addPage();
-        paginaActual += 1;
-        decorarPagina(paginaActual);
-        y = 58;
-      }
-    };
+            const nuevaPaginaSiNoCabe = (altoNecesario) => {
+                if (y + altoNecesario > pageHeight - 58) {
+                    docPdf.addPage();
+                    paginaActual += 1;
+                    decorarPagina(paginaActual);
+                    y = 58;
+                }
+            };
 
-    // --- ENCABEZADO ---
-    docPdf.setFont("helvetica", "bold");
-    docPdf.setFontSize(9);
-    docPdf.setTextColor(...COLOR_ACENTO);
-    docPdf.text((album.etiqueta || "ÁLBUM PRIVADO").toUpperCase(), pageWidth / 2, y, {
-      align: "center",
-    });
-    y += 26;
+            // --- ENCABEZADO ---
+            docPdf.setFont("helvetica", "bold");
+            docPdf.setFontSize(9);
+            docPdf.setTextColor(...COLOR_ACENTO);
+            docPdf.text((album.etiqueta || "ÁLBUM PRIVADO").toUpperCase(), pageWidth / 2, y, {
+                align: "center",
+            });
+            y += 26;
 
-    docPdf.setFont("times", "bold");
-    docPdf.setFontSize(24);
-    docPdf.setTextColor(...COLOR_TEXTO);
-    const tituloLineas = docPdf.splitTextToSize(album.titulo || "Álbum Privado", maxWidth);
-    docPdf.text(tituloLineas, pageWidth / 2, y, { align: "center" });
-    y += tituloLineas.length * 28 + 6;
+            docPdf.setFont("times", "bold");
+            docPdf.setFontSize(24);
+            docPdf.setTextColor(...COLOR_TEXTO);
+            const tituloLineas = docPdf.splitTextToSize(album.titulo || "Álbum Privado", maxWidth);
+            docPdf.text(tituloLineas, pageWidth / 2, y, { align: "center" });
+            y += tituloLineas.length * 28 + 6;
 
-    docPdf.setDrawColor(...COLOR_ACENTO);
-    docPdf.setLineWidth(1.5);
-    docPdf.line(pageWidth / 2 - 36, y, pageWidth / 2 + 36, y);
-    y += 20;
+            docPdf.setDrawColor(...COLOR_ACENTO);
+            docPdf.setLineWidth(1.5);
+            docPdf.line(pageWidth / 2 - 36, y, pageWidth / 2 + 36, y);
+            y += 20;
 
-    docPdf.setFont("helvetica", "normal");
-    docPdf.setFontSize(10.5);
-    docPdf.setTextColor(...COLOR_SUAVE);
-    docPdf.text(
-      `De ${album.autor || "Anónimo"} para ${album.destinatario || "Alguien especial"}`,
-      pageWidth / 2,
-      y,
-      { align: "center" }
-    );
-    y += 30;
+            docPdf.setFont("helvetica", "normal");
+            docPdf.setFontSize(10.5);
+            docPdf.setTextColor(...COLOR_SUAVE);
+            docPdf.text(
+                `De ${album.autor || "Anónimo"} para ${album.destinatario || "Alguien especial"}`,
+                pageWidth / 2,
+                y,
+                { align: "center" }
+            );
+            y += 30;
 
-    // --- TARJETA DE DEDICATORIA ---
-    if (album.carta?.trim()) {
-      docPdf.setFont("times", "italic");
-      docPdf.setFontSize(12);
-      const lineasCarta = docPdf.splitTextToSize(album.carta.trim(), maxWidth - 48);
-      const altoCaja = lineasCarta.length * 17 + 44;
+            // --- TARJETA DE DEDICATORIA ---
+            if (album.carta?.trim()) {
+                docPdf.setFont("times", "italic");
+                docPdf.setFontSize(12);
+                const lineasCarta = docPdf.splitTextToSize(album.carta.trim(), maxWidth - 48);
+                const altoCaja = lineasCarta.length * 17 + 44;
 
-      nuevaPaginaSiNoCabe(altoCaja + 16);
+                nuevaPaginaSiNoCabe(altoCaja + 16);
 
-      docPdf.setFillColor(...COLOR_TARJETA);
-      docPdf.setDrawColor(...COLOR_BORDE);
-      docPdf.setLineWidth(1);
-      docPdf.roundedRect(margin, y, maxWidth, altoCaja, 12, 12, "FD");
+                docPdf.setFillColor(...COLOR_TARJETA);
+                docPdf.setDrawColor(...COLOR_BORDE);
+                docPdf.setLineWidth(1);
+                docPdf.roundedRect(margin, y, maxWidth, altoCaja, 12, 12, "FD");
 
-      docPdf.setFont("helvetica", "bold");
-      docPdf.setFontSize(8.5);
-      docPdf.setTextColor(...COLOR_ACENTO);
-      docPdf.text("DEDICATORIA", margin + 24, y + 20);
+                docPdf.setFont("helvetica", "bold");
+                docPdf.setFontSize(8.5);
+                docPdf.setTextColor(...COLOR_ACENTO);
+                docPdf.text("DEDICATORIA", margin + 24, y + 20);
 
-      docPdf.setFont("times", "italic");
-      docPdf.setFontSize(12);
-      docPdf.setTextColor(...COLOR_TEXTO);
-      docPdf.text(lineasCarta, margin + 24, y + 38);
+                docPdf.setFont("times", "italic");
+                docPdf.setFontSize(12);
+                docPdf.setTextColor(...COLOR_TEXTO);
+                docPdf.text(lineasCarta, margin + 24, y + 38);
 
-      y += altoCaja + 28;
-    }
+                y += altoCaja + 28;
+            }
 
-    // --- RECUERDOS ---
-    if (album.fotos?.length > 0) {
-      nuevaPaginaSiNoCabe(40);
-      docPdf.setFont("helvetica", "bold");
-      docPdf.setFontSize(10);
-      docPdf.setTextColor(...COLOR_SUAVE);
-      docPdf.text(`NUESTROS MOMENTOS (${album.fotos.length})`, pageWidth / 2, y, {
-        align: "center",
-      });
-      y += 20;
+            // --- RECUERDOS ---
+            if (album.fotos?.length > 0) {
+                nuevaPaginaSiNoCabe(40);
+                docPdf.setFont("helvetica", "bold");
+                docPdf.setFontSize(10);
+                docPdf.setTextColor(...COLOR_SUAVE);
+                docPdf.text(`NUESTROS MOMENTOS (${album.fotos.length})`, pageWidth / 2, y, {
+                    align: "center",
+                });
+                y += 20;
 
-      for (let i = 0; i < album.fotos.length; i++) {
-        const foto = album.fotos[i];
-        const imgInfo = await cargarImagenAjustada(foto.url, maxWidth - 48, 240);
+                for (let i = 0; i < album.fotos.length; i++) {
+                    const foto = album.fotos[i];
+                    const imgInfo = await cargarImagenAjustada(foto.url, maxWidth - 48, 240);
 
-        const tituloFoto = `${String(i + 1).padStart(2, "0")}  •  ${foto.titulo || "Recuerdo"}`;
-        const subLineas = foto.subtitulo?.trim()
-          ? docPdf.splitTextToSize(`“${foto.subtitulo.trim()}”`, maxWidth - 48)
-          : [];
+                    const tituloFoto = `${String(i + 1).padStart(2, "0")}  •  ${foto.titulo || "Recuerdo"}`;
+                    const subLineas = foto.subtitulo?.trim()
+                        ? docPdf.splitTextToSize(`“${foto.subtitulo.trim()}”`, maxWidth - 48)
+                        : [];
 
-        const altoImagen = imgInfo ? imgInfo.alto + 14 : 0;
-        const altoTexto = 20 + (subLineas.length > 0 ? subLineas.length * 14 + 6 : 0);
-        const altoTarjeta = altoImagen + altoTexto + 26;
+                    const altoImagen = imgInfo ? imgInfo.alto + 14 : 0;
+                    const altoTexto = 20 + (subLineas.length > 0 ? subLineas.length * 14 + 6 : 0);
+                    const altoTarjeta = altoImagen + altoTexto + 26;
 
-        nuevaPaginaSiNoCabe(altoTarjeta + 16);
+                    nuevaPaginaSiNoCabe(altoTarjeta + 16);
 
-        docPdf.setFillColor(...COLOR_TARJETA);
-        docPdf.setDrawColor(...COLOR_BORDE);
-        docPdf.setLineWidth(1);
-        docPdf.roundedRect(margin, y, maxWidth, altoTarjeta, 12, 12, "FD");
+                    docPdf.setFillColor(...COLOR_TARJETA);
+                    docPdf.setDrawColor(...COLOR_BORDE);
+                    docPdf.setLineWidth(1);
+                    docPdf.roundedRect(margin, y, maxWidth, altoTarjeta, 12, 12, "FD");
 
-        let yInterno = y + 14;
+                    let yInterno = y + 14;
 
-        if (imgInfo) {
-          const xCentrado = margin + (maxWidth - imgInfo.ancho) / 2;
-          const formato = imgInfo.dataUrl.includes("image/png") ? "PNG" : "JPEG";
-          docPdf.addImage(
-            imgInfo.dataUrl,
-            formato,
-            xCentrado,
-            yInterno,
-            imgInfo.ancho,
-            imgInfo.alto,
-            undefined,
-            "FAST"
-          );
-          yInterno += imgInfo.alto + 16;
-        } else {
-          yInterno += 6;
+                    if (imgInfo) {
+                        const xCentrado = margin + (maxWidth - imgInfo.ancho) / 2;
+                        const formato = imgInfo.dataUrl.includes("image/png") ? "PNG" : "JPEG";
+                        docPdf.addImage(
+                            imgInfo.dataUrl,
+                            formato,
+                            xCentrado,
+                            yInterno,
+                            imgInfo.ancho,
+                            imgInfo.alto,
+                            undefined,
+                            "FAST"
+                        );
+                        yInterno += imgInfo.alto + 16;
+                    } else {
+                        yInterno += 6;
+                    }
+
+                    docPdf.setFont("helvetica", "bold");
+                    docPdf.setFontSize(10);
+                    docPdf.setTextColor(...COLOR_ACENTO);
+                    docPdf.text(tituloFoto, pageWidth / 2, yInterno, { align: "center" });
+                    yInterno += 15;
+
+                    if (subLineas.length > 0) {
+                        docPdf.setFont("times", "italic");
+                        docPdf.setFontSize(11);
+                        docPdf.setTextColor(...COLOR_TEXTO);
+                        docPdf.text(subLineas, pageWidth / 2, yInterno, { align: "center" });
+                    }
+
+                    y += altoTarjeta + 18;
+                }
+            }
+
+            const nombreLimpio = (album.titulo || "album-privado")
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/^-|-$/g, "");
+
+            docPdf.save(`${nombreLimpio || "album-privado"}.pdf`);
+        } catch (err) {
+            console.error("Error al generar el PDF:", err);
+        } finally {
+            setDescargandoPdf(false);
         }
-
-        docPdf.setFont("helvetica", "bold");
-        docPdf.setFontSize(10);
-        docPdf.setTextColor(...COLOR_ACENTO);
-        docPdf.text(tituloFoto, pageWidth / 2, yInterno, { align: "center" });
-        yInterno += 15;
-
-        if (subLineas.length > 0) {
-          docPdf.setFont("times", "italic");
-          docPdf.setFontSize(11);
-          docPdf.setTextColor(...COLOR_TEXTO);
-          docPdf.text(subLineas, pageWidth / 2, yInterno, { align: "center" });
-        }
-
-        y += altoTarjeta + 18;
-      }
-    }
-
-    const nombreLimpio = (album.titulo || "album-privado")
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
-
-    docPdf.save(`${nombreLimpio || "album-privado"}.pdf`);
-  } catch (err) {
-    console.error("Error al generar el PDF:", err);
-  } finally {
-    setDescargandoPdf(false);
-  }
-};
+    };
     //carga notas del album
     async function cargarNotasAlbum(albumId) {
         if (!albumId || albumId === "demo") return;
@@ -733,10 +733,6 @@ function AlbumPrivadoContent() {
         setIndiceFoto((prev) => (prev + 1) % album.fotos.length);
     };
 
-    const enviarNotaRapida = () => {
-        setNotaEnviada(true);
-        setTimeout(() => setNotaEnviada(false), 2400);
-    };
 
     const fotoActiva =
         indiceFoto !== null && album?.fotos?.[indiceFoto]
@@ -744,89 +740,86 @@ function AlbumPrivadoContent() {
             : null;
     const totalLikes = (album?.vistasPrivadas || 0) + (dioLike ? 1 : 0);
 
-   return (
-  <div
-    className={`min-h-screen flex flex-col transition-colors duration-300 ${
-      modoNoche ? "bg-transparent text-slate-100" : "bg-surface text-on-surface"
-    }`}
-  >
-    <header
-      className={`fixed top-0 w-full z-40 pt-safe backdrop-blur-xl transition-colors duration-300 ${
-        modoNoche
-          ? "bg-[#081024]/85 border-b border-indigo-400/15 shadow-[0_4px_20px_rgba(0,0,0,0.35)]"
-          : "bg-surface shadow-[0_1px_8px_rgba(0,0,0,0.04)]"
-      }`}
-    >
-      <div className="h-28 max-w-2xl mx-auto px-5 flex flex-col justify-between pb-2">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              aria-label="Volver"
-              onClick={() => router.back()}
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
-                modoNoche
-                  ? "text-slate-300 hover:text-rose-300 hover:bg-slate-800/80"
-                  : "text-on-surface-variant hover:text-primary hover:bg-surface-container-low"
-              }`}
+    return (
+        <div
+            className={`min-h-screen flex flex-col transition-colors duration-300 ${modoNoche ? "bg-transparent text-slate-100" : "bg-surface text-on-surface"
+                }`}
+        >
+            <header
+                className={`fixed top-0 w-full z-40 pt-safe backdrop-blur-xl transition-colors duration-300 ${modoNoche
+                    ? "bg-[#081024]/85 border-b border-indigo-400/15 shadow-[0_4px_20px_rgba(0,0,0,0.35)]"
+                    : "bg-surface/90 shadow-[0_1px_8px_rgba(0,0,0,0.04)]"
+                    }`}
             >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <div className="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
-              <img src={logo?.src} className="w-12 h-10 fill-primary" />
-            </div>
-            <span className="font-serif text-[22px] leading-[30px] text-primary font-semibold tracking-tight">
-              DediLove
-            </span>
-          </div>
+                <div className="min-h-[7.25rem] max-w-2xl mx-auto px-2 py-2.5 flex flex-col justify-between gap-2">
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <button
+                                type="button"
+                                aria-label="Volver"
+                                onClick={() => router.back()}
+                                className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors ${modoNoche
+                                    ? "text-slate-300 hover:text-rose-300 hover:bg-slate-800/80"
+                                    : "text-on-surface-variant hover:text-primary hover:bg-surface-container-low"
+                                    }`}
+                            >
+                                <ArrowLeft className="w-5 h-5" />
+                            </button>
 
-          <div className="flex items-center gap-2">
-            <BotonModoNoche className="h-10 px-3" />
+                            <div className="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary shrink-0">
+                                <img
+                                    src={logo?.src}
+                                    alt="DediLove"
+                                    className="w-6 h-6 object-contain"
+                                />
+                            </div>
 
-            <Link
-              href="/crear"
-              className="inline-flex items-center justify-center gap-1 h-10 px-4 rounded-full bg-primary-container text-on-primary text-xs font-semibold shadow-[0_4px_16px_rgba(225,29,72,0.2)] hover:opacity-95 transition-opacity"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Dedicar</span>
-            </Link>
+                            <span className="font-serif text-[22px] leading-[30px] text-primary font-semibold tracking-tight truncate">
+                                DediLove
+                            </span>
+                        </div>
 
-            <div className="w-9 h-9 rounded-full bg-primary-fixed text-primary font-serif text-xs font-bold flex items-center justify-center ring-2 ring-primary-fixed/70">
-              DL
-            </div>
-          </div>
-        </div>
+                        <div className="flex items-center gap-2.5 shrink-0">
+                            <BotonModoNoche className="h-9 px-3" />
 
-        <div className="flex items-center justify-between gap-2 py-1">
-          <Link
-            href="/"
-            className={`inline-flex items-center gap-1.5 text-xs font-semibold transition-colors ${
-              modoNoche
-                ? "text-amber-200/90 hover:text-amber-100"
-                : "text-primary hover:text-primary-container"
-            }`}
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Volver al muro</span>
-          </Link>
+                            <Link
+                                href="/perfil"
+                                aria-label="Mi perfil"
+                                className="w-9 h-9 rounded-full bg-primary-fixed text-primary font-serif text-xs font-bold flex items-center justify-center ring-2 ring-primary-fixed/70 shrink-0"
+                            >
+                                {(user?.displayName || "D").charAt(0).toUpperCase()}
+                            </Link>
+                        </div>
+                    </div>
 
-          <span
-            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors ${
-              modoNoche
-                ? "bg-slate-900/85 text-amber-200 border border-indigo-400/20"
-                : "bg-secondary-fixed text-on-secondary-fixed"
-            }`}
-          >
-            {desbloqueado ? (
-              <LockOpen className="w-3 h-3" />
-            ) : (
-              <Lock className="w-3 h-3" />
-            )}
-            <span>Álbum Privado</span>
-          </span>
-        </div>
-      </div>
-    </header>
+                    <div className="flex items-center justify-between gap-2 pt-1 border-t border-outline-variant/15">
+                        <Link
+                            href="/"
+                            className={`inline-flex items-center gap-1.5 text-xs font-semibold transition-colors ${modoNoche
+                                ? "text-amber-200/90 hover:text-amber-100"
+                                : "text-primary hover:text-primary-container"
+                                }`}
+                        >
+                            <ArrowLeft className="w-3.5 h-3.5" />
+                            <span>Volver al muro</span>
+                        </Link>
+
+                        <span
+                            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-colors ${modoNoche
+                                ? "bg-slate-900/85 text-amber-200 border border-indigo-400/20"
+                                : "bg-secondary-fixed text-on-secondary-fixed"
+                                }`}
+                        >
+                            {desbloqueado ? (
+                                <LockOpen className="w-3 h-3" />
+                            ) : (
+                                <Lock className="w-3 h-3" />
+                            )}
+                            <span>Álbum Privado</span>
+                        </span>
+                    </div>
+                </div>
+            </header>
 
             <main className="flex-1 w-full max-w-2xl mx-auto pt-32 pb-28 px-5">
                 {cargando ? (
@@ -919,39 +912,60 @@ function AlbumPrivadoContent() {
                     </div>
                 ) : (
                     <div
-                        className="relative flex flex-col w-full space-y-6 pb-8 rounded-3xl overflow-hidden bg-cover bg-center"
+                        className="relative isolate flex flex-col w-full rounded-[2rem]
+    overflow-hidden shadow-[0_15px_50px_rgba(80,35,45,0.10)]
+    border border-white/40"
                         style={
                             album.fondoUrl
-                                ? { backgroundImage: `url(${album.fondoUrl})` }
-                                : undefined
+                                ? {
+                                    backgroundImage: `url(${album.fondoUrl})`,
+                                    backgroundSize: "cover",
+                                    backgroundPosition: "center",
+                                    backgroundAttachment: "fixed",
+                                }
+                                : {
+                                    background: modoNoche
+                                        ? "linear-gradient(145deg, #111827, #1e1b2e)"
+                                        : "linear-gradient(145deg, #fff8f5, #fff0f3, #fffaf5)",
+                                }
                         }
                     >
                         {album.fondoUrl && (
                             <div
                                 aria-hidden="true"
-                                className="absolute inset-0 bg-surface/40 pointer-events-none z-1"
+                                className="absolute inset-0 z-0 pointer-events-none"
+                                style={{
+                                    background: modoNoche
+                                        ? "rgba(10, 12, 25, 0.78)"
+                                        : "rgba(255, 250, 249, 0.76)",
+                                    backdropFilter: "blur(2px)",
+                                }}
                             />
                         )}
 
-                        <div className="relative z-10 flex flex-col w-full space-y-6 p-3 sm:p-4">
-                            {/* Botón discreto solo para el autor */}
+                        <div className="relative z-10 flex flex-col w-full gap-7 p-3 sm:p-6">
+
+                            {/* PERSONALIZAR FONDO: solo para el autor */}
                             {album.esAutor && !album.esDemo && (
                                 <div className="flex justify-end">
                                     <button
                                         type="button"
                                         onClick={() => inputFondoRef.current?.click()}
                                         disabled={subiendoFondo}
-                                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-surface-container-lowest text-on-surface text-xs font-semibold shadow-xs hover:bg-surface-container-lowest transition-colors disabled:opacity-60"
+                                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full
+                bg-white/90 text-slate-700 text-xs font-semibold
+                shadow-lg backdrop-blur-md border border-white/60
+                hover:bg-white hover:-translate-y-0.5 transition-all
+                disabled:opacity-60"
                                     >
-                                        <ImagePlus className="w-3.5 h-3.5 text-primary" />
-                                        <span>
-                                            {subiendoFondo
-                                                ? "Guardando fondo..."
-                                                : album.fondoUrl
-                                                    ? "Cambiar fondo"
-                                                    : "Personalizar fondo"}
-                                        </span>
+                                        <ImagePlus className="w-4 h-4 text-rose-500" />
+                                        {subiendoFondo
+                                            ? "Guardando fondo..."
+                                            : album.fondoUrl
+                                                ? "Cambiar fondo"
+                                                : "Personalizar fondo"}
                                     </button>
+
                                     <input
                                         ref={inputFondoRef}
                                         type="file"
@@ -962,347 +976,416 @@ function AlbumPrivadoContent() {
                                 </div>
                             )}
 
-                            {/* Resto del álbum desbloqueado: carta, galería de recuerdos, etc. */}
-                        </div>
+                            {/* TODO EL CONTENIDO DEL ÁLBUM VA AQUÍ */}
 
 
-                        <div className="flex items-center justify-between px-4 py-2.5 rounded-2xl bg-surface-container-low m-5 shadow-[0_2px_12px_rgba(100,40,50,0.03)]">
-                            <div className="flex items-center gap-2 min-w-0">
-                                <span className="w-2 h-2 rounded-full bg-primary animate-pulse shrink-0" />
-                                <span className="text-xs sm:text-sm text-on-surface-variant font-medium truncate">
-                                    Desbloqueado • Vista privada
-                                </span>
-                            </div>
-                            <span className="text-[10px] text-secondary font-bold uppercase tracking-wider shrink-0">
-                                Verificado
-                            </span>
-                        </div>
+                           
 
-                        <article className="relative bg-surface-container-lowest rounded-3xl p-5 sm:p-6 shadow-[0_8px_24px_rgba(100,40,50,0.06)] overflow-hidden">
-                            <div className="flex flex-col gap-3 relative z-10">
-                                <div className="flex items-center justify-between flex-wrap gap-2">
-                                    <span className="px-3 py-1 rounded-full bg-primary-fixed text-on-primary-fixed text-[11px] font-bold uppercase tracking-wider">
-                                        {album.etiqueta}
-                                    </span>
-                                    <span className="text-xs text-outline flex items-center gap-1">
-                                        <Calendar className="w-3.5 h-3.5" />
-                                        <span>{album.fecha}</span>
-                                    </span>
-                                </div>
+                            <article className="relative overflow-hidden rounded-[1.8rem]
+    bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl
+    border border-white/70 dark:border-white/10
+    shadow-[0_12px_35px_rgba(100,40,50,0.07)]">
 
-                                <h1 className="font-serif text-[28px] leading-[36px] text-on-surface font-medium">
-                                    {album.titulo}
-                                </h1>
+                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r
+        from-rose-200 via-rose-400 to-orange-200" />
 
-                                <p className="text-xs text-primary font-semibold tracking-wide">
-                                    Dedicado con todo el cariño para {album.destinatario}
-                                </p>
+                                <div className="p-6 sm:p-9 flex flex-col gap-5">
 
-                                <div className=" rounded-2xl p-4 mt-1">
-                                    <p className="font-serif text-[18px] sm:text-[20px] leading-[31px] text-on-surface-variant italic">
-                                        “{album.carta}”
-                                    </p>
-                                    {album.fraseExtra && (
-                                        <p className="mt-2.5 text-right text-xs text-outline">
-                                            {album.fraseExtra.original} • {album.fraseExtra.traduccion}
+                                    <div className="flex items-center justify-between flex-wrap gap-3">
+                                        <span className="inline-flex items-center gap-2 px-3 py-1.5
+                rounded-full bg-rose-50 dark:bg-rose-950/50
+                text-rose-600 dark:text-rose-300
+                text-[10px] font-bold uppercase tracking-[0.15em]">
+                                            <Heart className="w-3 h-3 fill-current" />
+                                            {album.etiqueta}
+                                        </span>
+
+                                        <span className="text-xs text-slate-400 flex items-center gap-1.5">
+                                            <Calendar className="w-3.5 h-3.5" />
+                                            {album.fecha}
+                                        </span>
+                                    </div>
+
+                                    <div className="text-center py-3">
+                                        <p className="text-[10px] uppercase tracking-[0.3em]
+                text-rose-400 font-bold mb-3">
+                                            Una historia para recordar
                                         </p>
+
+                                        <h1 className="font-serif text-3xl sm:text-4xl
+                leading-tight text-slate-800 dark:text-slate-100">
+                                            {album.titulo}
+                                        </h1>
+
+                                        <div className="flex items-center justify-center gap-3 mt-5">
+                                            <span className="w-10 h-px bg-rose-200 dark:bg-rose-900" />
+                                            <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-400" />
+                                            <span className="w-10 h-px bg-rose-200 dark:bg-rose-900" />
+                                        </div>
+
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-4">
+                                            Dedicado con cariño para{" "}
+                                            <span className="font-semibold text-rose-500">
+                                                {album.destinatario}
+                                            </span>
+                                        </p>
+                                    </div>
+
+                                    {album.carta?.trim() && (
+                                        <div className="relative rounded-2xl bg-[#fffaf6]
+                dark:bg-slate-800/80 p-5 sm:p-7
+                border border-rose-100 dark:border-white/5">
+
+                                            <span className="absolute -top-3 left-5 text-4xl
+                    font-serif text-rose-300 leading-none">
+                                                “
+                                            </span>
+
+                                            <p className="font-serif text-lg sm:text-xl
+                    leading-[1.9] text-slate-700 dark:text-slate-200
+                    italic text-center">
+                                                {album.carta}
+                                            </p>
+
+                                            {album.fraseExtra && (
+                                                <p className="mt-5 text-center text-[11px]
+                        text-slate-400 tracking-wide">
+                                                    {album.fraseExtra.original}
+                                                    <span className="mx-1.5">·</span>
+                                                    {album.fraseExtra.traduccion}
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {album.cancion && (
+                                        <div className="flex items-center gap-3 p-3.5 rounded-2xl
+                bg-rose-50/80 dark:bg-rose-950/30
+                border border-rose-100 dark:border-rose-900/40">
+
+                                            <button
+                                                type="button"
+                                                aria-label={reproduciendo ? "Pausar audio" : "Reproducir audio"}
+                                                onClick={() => setReproduciendo((prev) => !prev)}
+                                                className="w-11 h-11 rounded-full bg-rose-500
+                        text-white flex items-center justify-center
+                        shadow-md hover:bg-rose-600 active:scale-95
+                        transition-all shrink-0"
+                                            >
+                                                {reproduciendo
+                                                    ? <Pause className="w-4 h-4 fill-current" />
+                                                    : <Play className="w-4 h-4 fill-current ml-0.5" />}
+                                            </button>
+
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-[9px] uppercase tracking-widest
+                        text-rose-400 font-bold">
+                                                    Nuestra banda sonora
+                                                </p>
+                                                <p className="text-sm font-semibold text-slate-700
+                        dark:text-slate-200 truncate">
+                                                    {album.cancion.titulo}
+                                                </p>
+                                            </div>
+
+                                            <span className="text-xs text-slate-400">
+                                                {album.cancion.duracion}
+                                            </span>
+                                        </div>
                                     )}
                                 </div>
+                            </article>
 
-                                {album.cancion && (
-                                    <div className="mt-2 flex items-center gap-3 p-3 rounded-full bg-surface-container-low">
-                                        <button
-                                            type="button"
-                                            aria-label={
-                                                reproduciendo ? "Pausar audio" : "Reproducir audio"
-                                            }
-                                            onClick={() => setReproduciendo((prev) => !prev)}
-                                            className="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-md active:scale-95 transition-transform shrink-0"
-                                        >
-                                            {reproduciendo ? (
-                                                <Pause className="w-4 h-4 fill-current" />
-                                            ) : (
-                                                <Play className="w-4 h-4 fill-current ml-0.5" />
-                                            )}
-                                        </button>
+                            <div className="flex items-end justify-between gap-3 px-1">
+                                <div>
+                                    <p
+                                        className={`text-[10px] uppercase tracking-[0.25em] font-bold mb-1 transition-colors ${modoNoche ? "text-rose-400" : "text-rose-500"
+                                            }`}
+                                    >
+                                        Nuestra colección
+                                    </p>
+                                    <h2
+                                        className={`font-serif text-2xl sm:text-3xl transition-colors ${modoNoche ? "text-slate-100" : "text-slate-800"
+                                            }`}
+                                    >
+                                        Pequeños grandes momentos
+                                    </h2>
+                                    <p
+                                        className={`text-xs mt-1 transition-colors ${modoNoche ? "text-amber-200/85" : "text-slate-500"
+                                            }`}
+                                    >
+                                        {album.fotos.length} recuerdos guardados
+                                    </p>
+                                </div>
 
-                                        <div className="flex-1 min-w-0 pr-2">
-                                            <div className="flex items-center justify-between text-on-surface">
-                                                <span className="text-xs font-semibold truncate">
-                                                    {album.cancion.titulo}
-                                                </span>
-                                                <span className="text-[11px] font-bold text-outline ml-2 whitespace-nowrap">
-                                                    {album.cancion.duracion}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </article>
-
-                        <div className="flex items-center justify-between gap-2 pt-1 px-3 py-2 rounded-2xl z-100 bg-surface/80 backdrop-blur-xs px-3 py-2 rounded-2xl">
-                            <div>
-                                <h2 className="font-serif text-[22px] leading-[30px] text-on-surface font-semibold z-100">
-                                    Galería de Recuerdos
-                                </h2>
-                                <p className="text-xs sm:text-sm text-on-surface-variant">
-                                    {album.fotos.length} momentos guardados por {album.autor}
-                                </p>
-                            </div>
-
-                            <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-surface-container-high text-on-surface-variant text-[10px] font-bold uppercase tracking-wider shrink-0">
-                                <MousePointerClick className="w-3.5 h-3.5" />
-                                <span>Toca para ampliar</span>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3 z-100">
-                            {album.fotos.map((foto, index) => (
-                                <div
-                                    key={foto.id}
-                                    onClick={() => abrirLightbox(index)}
-                                    className={`group relative rounded-2xl overflow-hidden cursor-pointer ${foto.polaroid
-                                        ? "bg-surface-container-lowest p-2 shadow-[0_4px_16px_rgba(100,40,50,0.05)] flex flex-col justify-between"
-                                        : "bg-surface-container shadow-[0_4px_16px_rgba(100,40,50,0.05)]"
+                                <span
+                                    className={`text-[10px] rounded-full px-3 py-2 border shrink-0 transition-colors ${modoNoche
+                                            ? "text-slate-200 bg-slate-900/85 border-indigo-400/20"
+                                            : "text-slate-500 bg-white/80 border-white/60"
                                         }`}
                                 >
+                                    <ZoomIn className="w-3.5 h-3.5 inline mr-1" />
+                                    Explorar
+                                </span>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4 sm:gap-5">
+                                {album.fotos.map((foto, index) => (
                                     <div
-                                        className={`${foto.alto} w-full overflow-hidden ${foto.polaroid ? "rounded-xl" : ""
-                                            } bg-gradient-to-br ${foto.tono} relative flex items-center justify-center`}
+                                        key={foto.id}
+                                        onClick={() => abrirLightbox(index)}
+                                        className={`group relative rounded-2xl overflow-hidden cursor-pointer
+    transition-all duration-300 hover:-translate-y-1
+    hover:shadow-xl
+    ${foto.polaroid
+                                                ? "bg-white dark:bg-slate-100 p-2 pb-3 shadow-[0_5px_18px_rgba(40,20,20,0.12)] rotate-[1deg] hover:rotate-0"
+                                                : "bg-white/90 dark:bg-slate-900/90 shadow-[0_5px_18px_rgba(40,20,20,0.10)]"
+                                            }`}
                                     >
-                                        {foto.url ? (
-                                            <img
-                                                src={foto.url}
-                                                alt={foto.titulo}
-                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                            />
+                                        <div
+                                            className={`${foto.alto} w-full overflow-hidden ${foto.polaroid ? "rounded-xl" : ""
+                                                } bg-gradient-to-br ${foto.tono} relative flex items-center justify-center`}
+                                        >
+                                            <div className="absolute top-3 left-3 z-10 px-2 py-1
+    rounded-full bg-black/35 backdrop-blur-md
+    text-white text-[9px] font-semibold tracking-wider">
+                                                {foto.codigo}
+                                            </div>
+                                            {foto.url ? (
+                                                <img
+                                                    src={foto.url}
+                                                    alt={foto.titulo}
+                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                />
+                                            ) : (
+                                                <Heart className="w-10 h-10 text-white/45 fill-white/30 transition-transform duration-500 group-hover:scale-105" />
+                                            )}
+                                        </div>
+
+                                        {foto.polaroid ? (
+                                            <div className="pt-2 px-1 flex items-center justify-between text-on-surface gap-1">
+                                                <p className="font-serif text-xs text-on-surface-variant italic truncate">
+                                                    {foto.titulo}
+                                                </p>
+                                                <span className="text-[10px] font-bold text-primary whitespace-nowrap">
+                                                    {foto.codigo} / {String(album.fotos.length).padStart(2, "0")}
+                                                </span>
+                                            </div>
                                         ) : (
-                                            <Heart className="w-10 h-10 text-white/45 fill-white/30 transition-transform duration-500 group-hover:scale-105" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent flex flex-col justify-end p-3 text-white">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-white/85 whitespace-nowrap">
+                                                        {foto.codigo} / {String(album.fotos.length).padStart(2, "0")}
+                                                    </span>
+                                                    <ZoomIn className="w-4 h-4 text-white/90" />
+                                                </div>
+                                                <p className="text-xs font-semibold text-white truncate mt-0.5">
+                                                    {foto.titulo}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+
+                            {(album.permiteAportes || album.esAutor) && !album.esDemo && (
+                                <div className="bg-surface-container-lowest z-100 rounded-3xl p-4 shadow-[0_6px_20px_rgba(100,40,50,0.04)] flex flex-col gap-2.5">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-semibold text-on-surface">
+                                                {album.esAutor ? "Añade más fotos" : "Suma tus fotos"}
+                                            </p>
+                                            <p className="text-xs text-on-surface-variant">
+                                                {album.fotos.length} / {album.limiteFotos} fotos en el álbum
+                                            </p>
+                                        </div>
+
+                                        {!user ? (
+                                            <Link
+                                                href="/perfil"
+                                                className="shrink-0 px-4 py-2 rounded-full bg-primary-container text-on-primary text-xs font-semibold"
+                                            >
+                                                Inicia sesión
+                                            </Link>
+                                        ) : album.fotos.length >= album.limiteFotos ? (
+                                            <span className="shrink-0 text-xs font-semibold text-outline">
+                                                Álbum completo
+                                            </span>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={() => inputAportesRef.current?.click()}
+                                                disabled={subiendo}
+                                                className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary-container text-on-primary text-xs font-semibold disabled:opacity-70"
+                                            >
+                                                <ImagePlus className="w-4 h-4" />
+                                                <span>{subiendo ? "Subiendo…" : "Añadir fotos"}</span>
+                                            </button>
                                         )}
                                     </div>
 
-                                    {foto.polaroid ? (
-                                        <div className="pt-2 px-1 flex items-center justify-between text-on-surface gap-1">
-                                            <p className="font-serif text-xs text-on-surface-variant italic truncate">
-                                                {foto.titulo}
-                                            </p>
-                                            <span className="text-[10px] font-bold text-primary whitespace-nowrap">
-                                                {foto.codigo} / {String(album.fotos.length).padStart(2, "0")}
-                                            </span>
-                                        </div>
-                                    ) : (
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent flex flex-col justify-end p-3 text-white">
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-[10px] font-bold uppercase tracking-wider text-white/85 whitespace-nowrap">
-                                                    {foto.codigo} / {String(album.fotos.length).padStart(2, "0")}
-                                                </span>
-                                                <ZoomIn className="w-4 h-4 text-white/90" />
-                                            </div>
-                                            <p className="text-xs font-semibold text-white truncate mt-0.5">
-                                                {foto.titulo}
-                                            </p>
+                                    {user && album.fotos.length < album.limiteFotos && (
+                                        <div className="w-full">
+                                            <input
+                                                type="text"
+                                                maxLength={90}
+                                                value={fraseNuevaFoto}
+                                                onChange={(e) => setFraseNuevaFoto(e.target.value)}
+                                                placeholder="Frase corta para esta foto (opcional)..."
+                                                className="w-full rounded-2xl bg-surface-container-low px-3.5 py-2 text-xs text-on-surface placeholder:text-outline/70 focus:outline-none"
+                                            />
                                         </div>
                                     )}
                                 </div>
-                            ))}
-                        </div>
+                            )}
+                            {errorAporte && (
+                                <p className="text-xs text-error font-medium px-1">{errorAporte}</p>
+                            )}
 
-                        {(album.permiteAportes || album.esAutor) && !album.esDemo && (
-                            <div className="bg-surface-container-lowest z-100 rounded-3xl p-4 shadow-[0_6px_20px_rgba(100,40,50,0.04)] flex flex-col gap-2.5">
-                                <div className="flex items-center justify-between gap-3">
-                                    <div className="min-w-0">
-                                        <p className="text-sm font-semibold text-on-surface">
-                                            {album.esAutor ? "Añade más fotos" : "Suma tus fotos"}
-                                        </p>
-                                        <p className="text-xs text-on-surface-variant">
-                                            {album.fotos.length} / {album.limiteFotos} fotos en el álbum
-                                        </p>
+                            <input
+                                ref={inputAportesRef}
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                onChange={agregarFotos}
+                                className="hidden"
+                            />
+
+                            <div className="bg-surface-container-lowest z-100 rounded-3xl p-5 shadow-[0_6px_20px_rgba(100,40,50,0.04)] space-y-4">
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setDioLike((prev) => !prev)}
+                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold active:scale-95 transition-all ${dioLike
+                                                ? "bg-primary text-on-primary"
+                                                : "bg-primary-fixed text-on-primary-fixed"
+                                                }`}
+                                        >
+                                            <Heart
+                                                className={`w-4 h-4 ${dioLike ? "fill-current" : "text-primary fill-primary"
+                                                    }`}
+                                            />
+                                            <span>{totalLikes}</span>
+                                        </button>
+                                        <span className="text-xs text-on-surface-variant">
+                                            Visitas privadas
+                                        </span>
                                     </div>
 
-                                    {!user ? (
-                                        <Link
-                                            href="/perfil"
-                                            className="shrink-0 px-4 py-2 rounded-full bg-primary-container text-on-primary text-xs font-semibold"
+                                    <div className="flex items-center gap-1 text-secondary text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">
+                                        <ShieldCheck className="w-4 h-4 shrink-0" />
+                                        <span>Espacio Privado</span>
+                                    </div>
+                                </div>
+
+                                {notaEnviada && (
+                                    <p className="text-xs text-primary font-semibold bg-primary-fixed/50 px-3.5 py-2 rounded-xl">
+                                        ¡Tu respuesta de cariño se guardó para {album.autor}!
+                                    </p>
+                                )}
+                                {mostrarCajaNota && (
+                                    <form onSubmit={manejarEnviarNota} className="space-y-2.5 pt-1">
+                                        <textarea
+                                            rows={2}
+                                            maxLength={240}
+                                            value={textoNota}
+                                            onChange={(e) => setTextoNota(e.target.value)}
+                                            placeholder={`Déjale una nota de cariño a ${album.autor || "quien creó este álbum"}...`}
+                                            className="w-full rounded-2xl bg-surface-container-low p-3 text-xs sm:text-sm text-on-surface placeholder:text-outline/70 focus:outline-none resize-none"
+                                        />
+                                        <div className="flex items-center justify-between gap-2">
+                                            <span className="text-[11px] text-outline">
+                                                {textoNota.length}/240
+                                            </span>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setMostrarCajaNota(false);
+                                                        setTextoNota("");
+                                                    }}
+                                                    className="px-3.5 py-1.5 rounded-full bg-surface-container-low text-on-surface-variant text-xs font-semibold"
+                                                >
+                                                    Cancelar
+                                                </button>
+                                                <button
+                                                    type="submit"
+                                                    disabled={enviandoNota || !textoNota.trim()}
+                                                    className="px-4 py-1.5 rounded-full bg-primary-container text-on-primary text-xs font-semibold disabled:opacity-60"
+                                                >
+                                                    {enviandoNota ? "Enviando..." : "Guardar nota"}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                )}
+
+                                {notasAlbum.length > 0 && (
+                                    <div className="relative bg-white/90 dark:bg-slate-900/90
+    backdrop-blur-xl border border-white/70 dark:border-white/10
+    rounded-[1.6rem] p-5 shadow-[0_8px_25px_rgba(100,40,50,0.06)] space-y-2 pt-2 border-t">
+                                        <button
+                                            type="button"
+                                            onClick={() => setNotasDesplegadas((prev) => !prev)}
+                                            className="w-full flex items-center justify-between text-left py-1 rounded-xl hover:bg-surface-container-low/50 transition-colors"
                                         >
-                                            Inicia sesión
-                                        </Link>
-                                    ) : album.fotos.length >= album.limiteFotos ? (
-                                        <span className="shrink-0 text-xs font-semibold text-outline">
-                                            Álbum completo
-                                        </span>
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-outline">
+                                                Notas en el álbum ({notasAlbum.length})
+                                            </span>
+                                            <span className="text-[11px] font-medium text-on-surface-variant">
+                                                {notasDesplegadas ? "Ocultar ▲" : "Ver ▼"}
+                                            </span>
+                                        </button>
+
+                                        {notasDesplegadas && (
+                                            <div className="space-y-2 max-h-48 overflow-y-auto pr-0.5">
+                                                {notasAlbum.map((nota) => (
+                                                    <div
+                                                        key={nota.id}
+                                                        className="rounded-2xl bg-surface-container-low/80 px-3.5 py-2.5 space-y-1"
+                                                    >
+                                                        <p className="font-serif italic text-xs sm:text-sm text-on-surface">
+                                                            “{nota.texto}”
+                                                        </p>
+                                                        <p className="text-[11px] text-on-surface-variant font-medium">
+                                                            — {nota.autorNombre || "Alguien especial"}
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                <div className="grid grid-cols-2 gap-3 pt-1">
+                                    <button
+                                        type="button"
+                                        onClick={descargarAlbumPdf}
+                                        disabled={descargandoPdf}
+                                        className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-full bg-surface-container-high text-on-surface text-xs font-semibold hover:bg-surface-container-highest transition-colors active:scale-98"
+                                    >
+                                        <FileText className="w-4 h-4" />
+                                        <span>{descargandoPdf ? "Generando PDF..." : "Guardar PDF"}</span>
+                                    </button>
+
+                                    {notasAlbum.length >= MAX_NOTAS_ALBUM ? (
+                                        <div className="w-full flex items-center justify-center text-center px-3 py-2 rounded-full bg-surface-container-low text-xs font-medium text-outline">
+                                            Máximo de {MAX_NOTAS_ALBUM} notas alcanzado
+                                        </div>
                                     ) : (
                                         <button
                                             type="button"
-                                            onClick={() => inputAportesRef.current?.click()}
-                                            disabled={subiendo}
-                                            className="shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full bg-primary-container text-on-primary text-xs font-semibold disabled:opacity-70"
+                                            onClick={() => setMostrarCajaNota((prev) => !prev)}
+                                            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-full bg-primary-container text-on-primary text-xs font-semibold shadow-[0_4px_14px_rgba(225,29,72,0.25)] hover:opacity-95 transition-opacity active:scale-98"
                                         >
-                                            <ImagePlus className="w-4 h-4" />
-                                            <span>{subiendo ? "Subiendo…" : "Añadir fotos"}</span>
+                                            <Send className="w-4 h-4" />
+                                            <span>Enviar nota</span>
                                         </button>
                                     )}
                                 </div>
 
-                                {user && album.fotos.length < album.limiteFotos && (
-                                    <div className="w-full">
-                                        <input
-                                            type="text"
-                                            maxLength={90}
-                                            value={fraseNuevaFoto}
-                                            onChange={(e) => setFraseNuevaFoto(e.target.value)}
-                                            placeholder="Frase corta para esta foto (opcional)..."
-                                            className="w-full rounded-2xl bg-surface-container-low px-3.5 py-2 text-xs text-on-surface placeholder:text-outline/70 focus:outline-none"
-                                        />
-                                    </div>
-                                )}
                             </div>
-                        )}
-                        {errorAporte && (
-                            <p className="text-xs text-error font-medium px-1">{errorAporte}</p>
-                        )}
-
-                        <input
-                            ref={inputAportesRef}
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            onChange={agregarFotos}
-                            className="hidden"
-                        />
-
-                        <div className="bg-surface-container-lowest z-100 rounded-3xl p-5 shadow-[0_6px_20px_rgba(100,40,50,0.04)] space-y-4">
-                            <div className="flex items-center justify-between gap-2">
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setDioLike((prev) => !prev)}
-                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold active:scale-95 transition-all ${dioLike
-                                            ? "bg-primary text-on-primary"
-                                            : "bg-primary-fixed text-on-primary-fixed"
-                                            }`}
-                                    >
-                                        <Heart
-                                            className={`w-4 h-4 ${dioLike ? "fill-current" : "text-primary fill-primary"
-                                                }`}
-                                        />
-                                        <span>{totalLikes}</span>
-                                    </button>
-                                    <span className="text-xs text-on-surface-variant">
-                                        Visitas privadas
-                                    </span>
-                                </div>
-
-                                <div className="flex items-center gap-1 text-secondary text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">
-                                    <ShieldCheck className="w-4 h-4 shrink-0" />
-                                    <span>Espacio Privado</span>
-                                </div>
-                            </div>
-
-                            {notaEnviada && (
-                                <p className="text-xs text-primary font-semibold bg-primary-fixed/50 px-3.5 py-2 rounded-xl">
-                                    ¡Tu respuesta de cariño se guardó para {album.autor}!
-                                </p>
-                            )}
-                            {mostrarCajaNota && (
-                                <form onSubmit={manejarEnviarNota} className="space-y-2.5 pt-1">
-                                    <textarea
-                                        rows={2}
-                                        maxLength={240}
-                                        value={textoNota}
-                                        onChange={(e) => setTextoNota(e.target.value)}
-                                        placeholder={`Déjale una nota de cariño a ${album.autor || "quien creó este álbum"}...`}
-                                        className="w-full rounded-2xl bg-surface-container-low p-3 text-xs sm:text-sm text-on-surface placeholder:text-outline/70 focus:outline-none resize-none"
-                                    />
-                                    <div className="flex items-center justify-between gap-2">
-                                        <span className="text-[11px] text-outline">
-                                            {textoNota.length}/240
-                                        </span>
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setMostrarCajaNota(false);
-                                                    setTextoNota("");
-                                                }}
-                                                className="px-3.5 py-1.5 rounded-full bg-surface-container-low text-on-surface-variant text-xs font-semibold"
-                                            >
-                                                Cancelar
-                                            </button>
-                                            <button
-                                                type="submit"
-                                                disabled={enviandoNota || !textoNota.trim()}
-                                                className="px-4 py-1.5 rounded-full bg-primary-container text-on-primary text-xs font-semibold disabled:opacity-60"
-                                            >
-                                                {enviandoNota ? "Enviando..." : "Guardar nota"}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </form>
-                            )}
-
-                            {notasAlbum.length > 0 && (
-                                <div className="space-y-2 pt-2 border-t border-outline-variant/20">
-                                    <button
-                                        type="button"
-                                        onClick={() => setNotasDesplegadas((prev) => !prev)}
-                                        className="w-full flex items-center justify-between text-left py-1 rounded-xl hover:bg-surface-container-low/50 transition-colors"
-                                    >
-                                        <span className="text-[10px] font-bold uppercase tracking-wider text-outline">
-                                            Notas en el álbum ({notasAlbum.length})
-                                        </span>
-                                        <span className="text-[11px] font-medium text-on-surface-variant">
-                                            {notasDesplegadas ? "Ocultar ▲" : "Ver ▼"}
-                                        </span>
-                                    </button>
-
-                                    {notasDesplegadas && (
-                                        <div className="space-y-2 max-h-48 overflow-y-auto pr-0.5">
-                                            {notasAlbum.map((nota) => (
-                                                <div
-                                                    key={nota.id}
-                                                    className="rounded-2xl bg-surface-container-low/80 px-3.5 py-2.5 space-y-1"
-                                                >
-                                                    <p className="font-serif italic text-xs sm:text-sm text-on-surface">
-                                                        “{nota.texto}”
-                                                    </p>
-                                                    <p className="text-[11px] text-on-surface-variant font-medium">
-                                                        — {nota.autorNombre || "Alguien especial"}
-                                                    </p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            <div className="grid grid-cols-2 gap-3 pt-1">
-                                <button
-                                    type="button"
-                                    onClick={descargarAlbumPdf}
-                                    disabled={descargandoPdf}
-                                    className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-full bg-surface-container-high text-on-surface text-xs font-semibold hover:bg-surface-container-highest transition-colors active:scale-98"
-                                >
-                                    <FileText className="w-4 h-4" />
-                                    <span>{descargandoPdf ? "Generando PDF..." : "Guardar PDF"}</span>
-                                </button>
-
-                                {notasAlbum.length >= MAX_NOTAS_ALBUM ? (
-                                    <div className="w-full flex items-center justify-center text-center px-3 py-2 rounded-full bg-surface-container-low text-xs font-medium text-outline">
-                                        Máximo de {MAX_NOTAS_ALBUM} notas alcanzado
-                                    </div>
-                                ) : (
-                                    <button
-                                        type="button"
-                                        onClick={() => setMostrarCajaNota((prev) => !prev)}
-                                        className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-full bg-primary-container text-on-primary text-xs font-semibold shadow-[0_4px_14px_rgba(225,29,72,0.25)] hover:opacity-95 transition-opacity active:scale-98"
-                                    >
-                                        <Send className="w-4 h-4" />
-                                        <span>Enviar nota</span>
-                                    </button>
-                                )}
-                            </div>
-
                         </div>
                     </div>
                 )}
@@ -1383,7 +1466,7 @@ function AlbumPrivadoContent() {
                 )}
             </main>
 
-            <BottomNav />
+
         </div>
     );
 }
