@@ -52,6 +52,7 @@ export async function POST(request) {
   const fotos = (album.fotos || []).map((f) => ({
     id: idFoto(f),
     titulo: f.titulo,
+    subtitulo: f.subtitulo || "",
     orden: f.orden,
     url: cloudinary.url(f.publicId, {
       type: "authenticated",

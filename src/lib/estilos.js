@@ -5,8 +5,8 @@ export const ESTILOS_TEXTO = {
 };
 
 export const FONDOS_PAPEL = {
-  "rose-silk": "bg-surface-container-lowest",
-  "gold-foil": "bg-[#FFFDF7]",
-  stardust: "bg-[#FDFBFF]",
-  velvet: "bg-[#FFF8F9]",
+  "rose-silk": "bg-[#F5E3D9]",
+  "gold-foil": "bg-[#F5E8C7]",
+  "stardust": "bg-[#EDE5FF]",
+  "velvet": "bg-[#F9DCE3]",
 };

@@ -3,7 +3,10 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useTema } from "@/components/ProveedorTema";
+import { BotonModoNoche } from "@/components/BotonModoNoche";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import logo from './../../img/logo.png'
 import {
     ChevronLeft,
     Heart,
@@ -87,34 +90,42 @@ const ESTILOS_TIPOGRAFIA = [
 ];
 
 const ACABADOS_PAPEL = [
-    {
-        id: "rose-silk",
-        nombre: "Seda Rosa",
-        colorCirculo: "bg-[#FAF0E6]",
-        colorIcono: "text-primary",
-        fondoTarjeta: "bg-surface-container-lowest",
-    },
-    {
-        id: "gold-foil",
-        nombre: "Pan de Oro",
-        colorCirculo: "bg-[#FEF3C7]",
-        colorIcono: "text-secondary",
-        fondoTarjeta: "bg-[#FFFDF7]",
-    },
-    {
-        id: "stardust",
-        nombre: "Estelar",
-        colorCirculo: "bg-[#F3E8FF]",
-        colorIcono: "text-tertiary",
-        fondoTarjeta: "bg-[#FDFBFF]",
-    },
-    {
-        id: "velvet",
-        nombre: "Terciopelo",
-        colorCirculo: "bg-[#FFE4E6]",
-        colorIcono: "text-primary",
-        fondoTarjeta: "bg-[#FFF8F9]",
-    },
+   
+{
+    id: "rose-silk",
+    nombre: "Seda Rosa",
+    colorCirculo: "bg-[#D9AD9A]",
+    colorIcono: "text-[#B87970]",
+    fondoTarjeta: "bg-[#F5E3D9]",
+}
+,
+    
+{
+    id: "gold-foil",
+    nombre: "Pan de Oro",
+    colorCirculo: "bg-[#D6B45D]",
+    colorIcono: "text-[#A47A22]",
+    fondoTarjeta: "bg-[#F5E8C7]",
+}
+,
+    
+{
+    id: "stardust",
+    nombre: "Estelar",
+    colorCirculo: "bg-[#C4B5FD]",
+    colorIcono: "text-[#8B5CF6]",
+    fondoTarjeta: "bg-[#EDE5FF]",
+}
+,
+   
+{
+    id: "velvet",
+    nombre: "Terciopelo",
+    colorCirculo: "bg-[#E8A5B7]",
+    colorIcono: "text-[#BE456A]",
+    fondoTarjeta: "bg-[#F9DCE3]",
+}
+
 ];
 
 const MAX_FOTOS = 5;
@@ -123,6 +134,7 @@ export default function EditorDedicatoriaPage() {
     const router = useRouter();
     const { user, loading } = useAuth();
     const inputFotosRef = useRef(null);
+    const {modoNoche} = useTema();
 
     const [destinatario, setDestinatario] = useState("");
     const [categoria, setCategoria] = useState("Amor");
@@ -344,215 +356,310 @@ export default function EditorDedicatoriaPage() {
 
     if (loading || !user) return null;
 
-    return (
-        <div className="min-h-screen flex flex-col bg-surface text-on-surface">
-            {/* Input oculto para elegir fotos */}
-            <input
-                ref={inputFotosRef}
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={manejarSeleccionFotos}
-                className="hidden"
+   return (
+  <div
+    className={`min-h-screen flex flex-col transition-colors duration-300 ${
+      modoNoche ? "bg-transparent text-slate-100" : "bg-surface text-on-surface"
+    }`}
+  >
+    {/* Input oculto para elegir fotos */}
+    <input
+      ref={inputFotosRef}
+      type="file"
+      accept="image/*"
+      multiple
+      onChange={manejarSeleccionFotos}
+      className="hidden"
+    />
+
+    {/* Encabezado superior fijo */}
+    <header
+      className={`fixed top-0 w-full z-40 pt-safe backdrop-blur-xl transition-colors duration-300 ${
+        modoNoche
+          ? "bg-[#081024]/85 border-b border-indigo-400/15 shadow-[0_4px_20px_rgba(0,0,0,0.35)]"
+          : "bg-surface/85 shadow-[0_1px_8px_rgba(0,0,0,0.04)]"
+      }`}
+    >
+      <div className="h-16 max-w-2xl mx-auto px-5 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label="Volver"
+            onClick={() => router.back()}
+            className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+              modoNoche
+                ? "text-slate-300 hover:text-rose-300 hover:bg-slate-800/80"
+                : "text-on-surface-variant hover:text-primary hover:bg-surface-container-low"
+            }`}
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <div className="w-7 h-7 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
+            <img src={logo?.src} className="w-14 h-10 fill-primary" />
+          </div>
+          <h1
+            className={`font-serif text-[20px] leading-[28px] font-semibold transition-colors ${
+              modoNoche ? "text-slate-100" : "text-on-surface"
+            }`}
+          >
+            Editor de Dedicatoria
+          </h1>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <BotonModoNoche className="h-9 px-3" />
+
+          <div className="w-9 h-9 rounded-full bg-primary-fixed text-primary font-serif text-xs font-bold flex items-center justify-center ring-2 ring-primary-fixed/70">
+            {(user?.displayName || "D").charAt(0).toUpperCase()}
+          </div>
+        </div>
+      </div>
+    </header>
+
+    {/* Contenido principal */}
+    <main className="flex-1 w-full max-w-2xl mx-auto pt-20 pb-28 px-5">
+      {/* Cinta de estado */}
+      <div className="flex items-center justify-between py-1.5 mb-3">
+        <div
+          className={`flex items-center gap-2 px-3 py-1 rounded-full transition-colors ${
+            modoNoche
+              ? "bg-slate-900/80 border border-indigo-400/15"
+              : "bg-surface-container-low shadow-2xs"
+          }`}
+        >
+          <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+          <span
+            className={`text-[11px] font-bold uppercase tracking-wider ${
+              modoNoche ? "text-slate-200" : "text-on-surface-variant"
+            }`}
+          >
+            {estadoPublicacion === "saving" && mensajeEstado
+              ? mensajeEstado
+              : avisoBorrador
+              ? "Borrador guardado"
+              : "Edición en curso"}
+          </span>
+        </div>
+
+        <div
+          className={`flex items-center gap-1 ${
+            modoNoche ? "text-amber-200/90" : "text-primary"
+          }`}
+        >
+          <Sparkles className="w-4 h-4" />
+          <span className="text-xs font-semibold">Edición Especial</span>
+        </div>
+      </div>
+
+      {/* Subencabezado editorial */}
+      <div className="mb-5">
+        <h2
+          className={`font-serif text-[28px] leading-[36px] font-medium transition-colors ${
+            modoNoche ? "text-slate-100" : "text-on-surface"
+          }`}
+        >
+          Escribe una dedicatoria
+        </h2>
+        <p
+          className={`text-sm mt-1 transition-colors ${
+            modoNoche ? "text-amber-200/90" : "text-on-surface-variant"
+          }`}
+        >
+          Convierte lo que sientes en un recuerdo duradero y especial.
+        </p>
+      </div>
+
+      {errorForm && (
+        <div className="mb-4 p-3.5 rounded-2xl bg-error-container text-on-error-container text-xs sm:text-sm font-medium">
+          {errorForm}
+        </div>
+      )}
+
+      <div className="flex flex-col gap-5">
+        {/* Destinatario */}
+        <div
+          className={`p-5 rounded-2xl flex flex-col gap-2 transition-colors ${
+            modoNoche
+              ? "bg-slate-900/80 border border-indigo-400/15 shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
+              : "bg-surface-container-lowest shadow-xs"
+          }`}
+        >
+          <label
+            htmlFor="recipientInput"
+            className={`text-[11px] font-bold uppercase tracking-wider flex items-center justify-between ${
+              modoNoche ? "text-slate-300" : "text-outline"
+            }`}
+          >
+            <span>Para: Destinatario</span>
+            <span
+              className={`font-medium normal-case ${
+                modoNoche ? "text-rose-300" : "text-primary"
+              }`}
+            >
+              Obligatorio
+            </span>
+          </label>
+          <div className="flex items-center gap-2.5">
+            <Heart
+              className={`w-5 h-5 shrink-0 ${
+                modoNoche ? "text-rose-300" : "text-on-surface-variant"
+              }`}
             />
+            <input
+              id="recipientInput"
+              type="text"
+              value={destinatario}
+              onChange={(e) => setDestinatario(e.target.value)}
+              placeholder="¿Para quién es esta dedicatoria? Ej. Elena, Mamá..."
+              className={`w-full bg-transparent border-0 outline-none text-base sm:text-lg ${
+                modoNoche
+                  ? "text-slate-100 placeholder:text-slate-400/70"
+                  : "text-on-surface placeholder:text-on-surface-variant/45"
+              }`}
+            />
+          </div>
+        </div>
 
-            {/* Encabezado superior fijo */}
-            <header className="fixed top-0 w-full z-40 pt-safe bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-                <div className="h-16 max-w-2xl mx-auto px-5 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <button
-                            type="button"
-                            aria-label="Volver"
-                            onClick={() => router.back()}
-                            className="w-10 h-10 rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary hover:bg-surface-container-low transition-colors"
-                        >
-                            <ChevronLeft className="w-5 h-5" />
-                        </button>
-                        <div className="w-7 h-7 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
-                            <Heart className="w-3.5 h-3.5 fill-primary" />
-                        </div>
-                        <h1 className="font-serif text-[20px] leading-[28px] text-on-surface font-semibold">
-                            Editor de Dedicatoria
-                        </h1>
-                    </div>
+        {/* Categorías */}
+        <div className="flex flex-col gap-2">
+          <span
+            className={`text-[11px] font-bold uppercase tracking-wider px-1 ${
+              modoNoche ? "text-slate-300" : "text-outline"
+            }`}
+          >
+            Elige el vínculo o momento
+          </span>
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+            {CATEGORIAS.map((cat) => {
+              const activa = categoria === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setCategoria(cat.id)}
+                  className={`px-4 py-2 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 shrink-0 ${
+                    activa
+                      ? "bg-primary text-on-primary shadow-sm"
+                      : modoNoche
+                      ? "bg-slate-900/80 text-slate-300 border border-indigo-400/15 hover:text-rose-300"
+                      : "bg-surface-container text-on-surface-variant hover:bg-surface-container-high shadow-2xs"
+                  }`}
+                >
+                  <span>{cat.label}</span>
+                  <span className="text-xs">{cat.simbolo}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-                    <div className="w-9 h-9 rounded-full bg-primary-fixed text-primary font-serif text-xs font-bold flex items-center justify-center ring-2 ring-primary-fixed/70">
-                        {(user?.displayName || "D").charAt(0).toUpperCase()}
-                    </div>
-                </div>
-            </header>
+        {/* Lienzo de la carta */}
+        <div
+          className={`${acabadoPapel.fondoTarjeta} rounded-2xl p-5 flex flex-col relative overflow-hidden transition-all duration-300 ${
+            modoNoche
+              ? "ring-1 ring-indigo-300/20 shadow-[0_14px_34px_rgba(0,0,0,0.5)] brightness-[0.97]"
+              : "shadow-md"
+          }`}
+        >
+          <div className="absolute -right-6 -bottom-6 w-32 h-32 rounded-full bg-primary-fixed/25 pointer-events-none blur-2xl" />
 
-            {/* Contenido principal */}
-            <main className="flex-1 w-full max-w-2xl mx-auto pt-20 pb-28 px-5">
-                {/* Cinta de estado */}
-                <div className="flex items-center justify-between py-1.5 mb-3">
-                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-low shadow-2xs">
-                        <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant">
-                            {estadoPublicacion === "saving" && mensajeEstado
-                                ? mensajeEstado
-                                : avisoBorrador
-                                    ? "Borrador guardado"
-                                    : "Edición en curso"}
-                        </span>
-                    </div>
+          {/* Frases rápidas */}
+          <div className="flex flex-col gap-1.5 mb-3 relative z-10">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-outline flex items-center gap-1">
+              <Sparkles className="w-3.5 h-3.5 text-secondary" />
+              Frases rápidas (toca para insertar)
+            </span>
 
-                    <div className="flex items-center gap-1 text-primary">
-                        <Sparkles className="w-4 h-4" />
-                        <span className="text-xs font-semibold">Edición Especial</span>
-                    </div>
-                </div>
+            <div className="flex items-center gap-1.5 overflow-x-auto py-1 no-scrollbar">
+              {FRASES_RAPIDAS.map((item) => (
+                <button
+                  key={item.etiqueta}
+                  type="button"
+                  onClick={() => insertarFrase(item.texto)}
+                  className="px-3 py-1.5 rounded-full bg-surface-container-low hover:bg-primary-fixed-dim text-on-surface text-xs shadow-2xs whitespace-nowrap transition-colors active:scale-95 shrink-0"
+                >
+                  <span>{item.etiqueta}</span>
+                  {item.extra && (
+                    <span className="text-on-surface-variant text-[11px] ml-1">
+                      {item.extra}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
 
-                {/* Subencabezado editorial */}
-                <div className="mb-5">
-                    <h2 className="font-serif text-[28px] leading-[36px] text-on-surface font-medium">
-                        Escribe una dedicatoria
-                    </h2>
-                    <p className="text-sm text-on-surface-variant mt-1">
-                        Convierte lo que sientes en un recuerdo duradero y especial.
-                    </p>
-                </div>
+          {/* Área de texto */}
+          <div className="relative w-full z-10">
+            <textarea
+              id="messageContent"
+              rows={5}
+              maxLength={limiteCaracteres}
+              value={mensaje}
+              onChange={(e) => setMensaje(e.target.value)}
+              placeholder="Escribe tu dedicatoria desde el corazón..."
+              className={`w-full bg-transparent border-0 outline-none text-[19px] leading-[32px] text-on-surface placeholder:text-on-surface-variant/45 resize-none ${estiloTipografia.claseTexto}`}
+            />
+          </div>
 
-                {errorForm && (
-                    <div className="mb-4 p-3.5 rounded-2xl bg-error-container text-on-error-container text-xs sm:text-sm font-medium">
-                        {errorForm}
-                    </div>
-                )}
+          {/* Indicador de fuente y contador */}
+          <div className="flex items-center justify-between pt-2 mt-1 text-on-surface-variant relative z-10">
+            <div className="flex items-center gap-1.5">
+              <Edit3 className="w-3.5 h-3.5 text-primary" />
+              <span className="text-[11px] font-bold tracking-wider uppercase">
+                {estiloTipografia.etiquetaIndicador} • {acabadoPapel.nombre}
+              </span>
+            </div>
+            <div className="text-xs font-medium">
+              <span className="text-primary font-bold">{mensaje.length}</span> /{" "}
+              {limiteCaracteres} caracteres
+            </div>
+          </div>
+        </div>
 
-                <div className="flex flex-col gap-5">
-                    {/* Destinatario */}
-                    <div className="bg-surface-container-lowest p-5 rounded-2xl shadow-xs flex flex-col gap-2">
-                        <label
-                            htmlFor="recipientInput"
-                            className="text-[11px] font-bold uppercase tracking-wider text-outline flex items-center justify-between"
-                        >
-                            <span>Para: Destinatario</span>
-                            <span className="text-primary font-medium normal-case">
-                                Obligatorio
-                            </span>
-                        </label>
-                        <div className="flex items-center gap-2.5">
-                            <Heart className="w-5 h-5 text-on-surface-variant shrink-0" />
-                            <input
-                                id="recipientInput"
-                                type="text"
-                                value={destinatario}
-                                onChange={(e) => setDestinatario(e.target.value)}
-                                placeholder="¿Para quién es esta dedicatoria? Ej. Elena, Mamá..."
-                                className="w-full bg-transparent border-0 outline-none text-base sm:text-lg text-on-surface placeholder:text-on-surface-variant/45"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Categorías */}
-                    <div className="flex flex-col gap-2">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-outline px-1">
-                            Elige el vínculo o momento
-                        </span>
-                        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-                            {CATEGORIAS.map((cat) => {
-                                const activa = categoria === cat.id;
-                                return (
-                                    <button
-                                        key={cat.id}
-                                        type="button"
-                                        onClick={() => setCategoria(cat.id)}
-                                        className={`px-4 py-2 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-transform active:scale-95 shrink-0 ${activa
-                                            ? "bg-primary text-on-primary"
-                                            : "bg-surface-container text-on-surface-variant hover:bg-surface-container-high"
-                                            }`}
-                                    >
-                                        <span>{cat.label}</span>
-                                        <span className="text-xs">{cat.simbolo}</span>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    {/* Lienzo de la carta */}
-                    <div
-                        className={`${acabadoPapel.fondoTarjeta} rounded-2xl p-5 shadow-md flex flex-col relative overflow-hidden transition-colors`}
-                    >
-                        <div className="absolute -right-6 -bottom-6 w-32 h-32 rounded-full bg-primary-fixed/25 pointer-events-none blur-2xl" />
-
-                        {/* Frases rápidas */}
-                        <div className="flex flex-col gap-1.5 mb-3 relative z-10">
-                            <span className="text-[11px] font-bold uppercase tracking-wider text-outline flex items-center gap-1">
-                                <Sparkles className="w-3.5 h-3.5 text-secondary" />
-                                Frases rápidas (toca para insertar)
-                            </span>
-
-                            <div className="flex items-center gap-1.5 overflow-x-auto py-1 no-scrollbar">
-                                {FRASES_RAPIDAS.map((item) => (
-                                    <button
-                                        key={item.etiqueta}
-                                        type="button"
-                                        onClick={() => insertarFrase(item.texto)}
-                                        className="px-3 py-1.5 rounded-full bg-surface-container-low hover:bg-primary-fixed-dim text-on-surface text-xs shadow-2xs whitespace-nowrap transition-colors active:scale-95 shrink-0"
-                                    >
-                                        <span>{item.etiqueta}</span>
-                                        {item.extra && (
-                                            <span className="text-on-surface-variant text-[11px] ml-1">
-                                                {item.extra}
-                                            </span>
-                                        )}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Área de texto */}
-                        <div className="relative w-full z-10">
-                            <textarea
-                                id="messageContent"
-                                rows={5}
-                                maxLength={limiteCaracteres}
-                                value={mensaje}
-                                onChange={(e) => setMensaje(e.target.value)}
-                                placeholder="Escribe tu dedicatoria desde el corazón..."
-                                className={`w-full bg-transparent border-0 outline-none text-[19px] leading-[32px] text-on-surface placeholder:text-on-surface-variant/45 resize-none ${estiloTipografia.claseTexto}`}
-                            />
-                        </div>
-
-                        {/* Indicador de fuente y contador */}
-                        <div className="flex items-center justify-between pt-2 mt-1 text-on-surface-variant relative z-10">
-                            <div className="flex items-center gap-1.5">
-                                <Edit3 className="w-3.5 h-3.5 text-primary" />
-                                <span className="text-[11px] font-bold tracking-wider uppercase">
-                                    {estiloTipografia.etiquetaIndicador} • {acabadoPapel.nombre}
-                                </span>
-                            </div>
-                            <div className="text-xs font-medium">
-                                <span className="text-primary font-bold">{mensaje.length}</span> /{" "}
-                                {limiteCaracteres} caracteres
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Firma del remitente */}
-                    <div className="bg-surface-container-lowest p-5 rounded-2xl shadow-xs flex flex-col gap-2">
-                        <label
-                            htmlFor="senderInput"
-                            className="text-[11px] font-bold uppercase tracking-wider text-outline flex items-center justify-between"
-                        >
-                            <span>De: Tu firma</span>
-                            <span className="text-on-surface-variant font-normal normal-case">
-                                Visible en el muro
-                            </span>
-                        </label>
-                        <div className="flex items-center gap-2.5">
-                            <PenTool className="w-5 h-5 text-secondary shrink-0" />
-                            <input
-                                id="senderInput"
-                                type="text"
-                                value={remitente}
-                                onChange={(e) => setRemitente(e.target.value)}
-                                placeholder="Tu nombre o apodo (ej. Julián, Anónimo)"
-                                className="w-full bg-transparent border-0 outline-none text-base sm:text-lg text-on-surface placeholder:text-on-surface-variant/45"
-                            />
-                        </div>
-                    </div>
+        {/* Firma del remitente */}
+        <div
+          className={`p-5 rounded-2xl flex flex-col gap-2 transition-colors ${
+            modoNoche
+              ? "bg-slate-900/80 border border-indigo-400/15 shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
+              : "bg-surface-container-lowest shadow-xs"
+          }`}
+        >
+          <label
+            htmlFor="senderInput"
+            className={`text-[11px] font-bold uppercase tracking-wider flex items-center justify-between ${
+              modoNoche ? "text-slate-300" : "text-outline"
+            }`}
+          >
+            <span>De: Tu firma</span>
+            <span
+              className={`font-normal normal-case ${
+                modoNoche ? "text-slate-400" : "text-on-surface-variant"
+              }`}
+            >
+              Visible en el muro
+            </span>
+          </label>
+          <div className="flex items-center gap-2.5">
+            <PenTool
+              className={`w-5 h-5 shrink-0 ${
+                modoNoche ? "text-amber-200/90" : "text-secondary"
+              }`}
+            />
+            <input
+              id="senderInput"
+              type="text"
+              value={remitente}
+              onChange={(e) => setRemitente(e.target.value)}
+              placeholder="Tu nombre o apodo (ej. Julián, Anónimo)"
+              className={`w-full bg-transparent border-0 outline-none text-base sm:text-lg ${
+                modoNoche
+                  ? "text-slate-100 placeholder:text-slate-400/70"
+                  : "text-on-surface placeholder:text-on-surface-variant/45"
+              }`}
+            />
+          </div>
+        </div>
 
                     {/* Tarjeta de opciones Premium y Álbum Privado */}
                     <div className="rounded-3xl p-5 shadow-md bg-gradient-to-br from-secondary-fixed via-surface-container-lowest to-primary-fixed flex flex-col gap-5 relative overflow-hidden">

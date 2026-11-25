@@ -77,6 +77,8 @@ export async function POST(request) {
         id: randomUUID(),
         publicId: f.publicId,
         titulo: String(f.titulo || "").slice(0, 60),
+        subtitulo:
+          typeof f.subtitulo === "string" ? f.subtitulo.trim().slice(0, 90) : "",
         orden: ultimo + i + 1,
         subidaPor: user.uid,
       }));

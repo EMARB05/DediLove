@@ -4,6 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ESTILOS_TEXTO, FONDOS_PAPEL } from "../lib/estilos";
+import { useTema } from "@/components/ProveedorTema";
+import { BotonModoNoche } from "@/components/BotonModoNoche";
+import Logo from './../img/logo.png'
 import {
   collection,
   getDoc,
@@ -115,6 +118,7 @@ const CATEGORIAS = [
 ];
 
 export default function MuroPublicoPage() {
+  const { modoNoche } = useTema();
   const [dedicatorias, setDedicatorias] = useState(DEDICATORIAS_DEMO);
   const { user, loading } = useAuth();
   const [cargando, setCargando] = useState(true);
@@ -211,20 +215,50 @@ export default function MuroPublicoPage() {
 
   //efecto que carga lo que ya he guardado
   useEffect(() => {
-  if (!user) {
-    setGuardados({});
-    return;
-  }
-  getDocs(collection(db, "users", user.uid, "guardadas"))
-    .then((snap) => {
-      const mapa = {};
-      snap.forEach((d) => {
-        mapa[d.id] = true;
-      });
-      setGuardados(mapa);
-    })
-    .catch(console.error);
-}, [user]);
+    if (!user) {
+      setGuardados({});
+      return;
+    }
+    getDocs(collection(db, "users", user.uid, "guardadas"))
+      .then((snap) => {
+        const mapa = {};
+        snap.forEach((d) => {
+          mapa[d.id] = true;
+        });
+        setGuardados(mapa);
+      })
+      .catch(console.error);
+  }, [user]);
+
+  const [copiadoId, setCopiadoId] = useState(null);
+
+  const handleCompartir = async (item) => {
+    const url = `${window.location.origin}/?dedicatoria=${encodeURIComponent(item.id)}`;
+    const texto = item.remitente
+      ? `Dedicatoria para ${item.destinatario} de ${item.remitente} en DediLove`
+      : `Dedicatoria para ${item.destinatario} en DediLove`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Para ${item.destinatario} • DediLove`,
+          text: texto,
+          url,
+        });
+        return;
+      } catch (error) {
+        if (error?.name === "AbortError") return;
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiadoId(item.id);
+      setTimeout(() => setCopiadoId(null), 2000);
+    } catch {
+      window.prompt("Copia este enlace:", url);
+    }
+  };
 
 
   const dedicatoriasFiltradas =
@@ -278,28 +312,28 @@ export default function MuroPublicoPage() {
   };
 
   const toggleGuardar = async (item) => {
-  if (!user) {
-    router.push("/perfil");
-    return;
-  }
-
-  const yaGuardado = Boolean(guardados[item.id]);
-  setGuardados((prev) => ({ ...prev, [item.id]: !yaGuardado }));
-
-  if (item.esDemo) return; // las demo solo viven en local
-
-  try {
-    const ref = doc(db, "users", user.uid, "guardadas", item.id);
-    if (yaGuardado) {
-      await deleteDoc(ref);
-    } else {
-      await setDoc(ref, { guardadoEn: serverTimestamp() });
+    if (!user) {
+      router.push("/perfil");
+      return;
     }
-  } catch (err) {
-    console.error("Error al guardar:", err);
-    setGuardados((prev) => ({ ...prev, [item.id]: yaGuardado }));
-  }
-};
+
+    const yaGuardado = Boolean(guardados[item.id]);
+    setGuardados((prev) => ({ ...prev, [item.id]: !yaGuardado }));
+
+    if (item.esDemo) return; // las demo solo viven en local
+
+    try {
+      const ref = doc(db, "users", user.uid, "guardadas", item.id);
+      if (yaGuardado) {
+        await deleteDoc(ref);
+      } else {
+        await setDoc(ref, { guardadoEn: serverTimestamp() });
+      }
+    } catch (err) {
+      console.error("Error al guardar:", err);
+      setGuardados((prev) => ({ ...prev, [item.id]: yaGuardado }));
+    }
+  };
 
   const renderBadgeIcon = (categoria) => {
     if (categoria === "Amistad") return <Users className="w-3.5 h-3.5" />;
@@ -308,15 +342,48 @@ export default function MuroPublicoPage() {
     return <Heart className="w-3.5 h-3.5 text-primary fill-primary" />;
   };
 
+  const [destacadaId, setDestacadaId] = useState(null);
+
+  useEffect(() => {
+    if (!dedicatoriasFiltradas.length) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const idObjetivo = params.get("dedicatoria");
+    if (!idObjetivo) return;
+
+    const existe = dedicatoriasFiltradas.some((d) => String(d.id) === String(idObjetivo));
+    if (!existe) return;
+
+    setDestacadaId(idObjetivo);
+
+    const timer = setTimeout(() => {
+      const el = document.getElementById(`dedicatoria-${idObjetivo}`);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 150);
+
+    const limpiarResalte = setTimeout(() => {
+      setDestacadaId(null);
+    }, 3000);
+
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(limpiarResalte);
+    };
+  }, [dedicatoriasFiltradas]);
+
   return (
-    <div className="min-h-screen flex flex-col bg-surface text-on-surface">
+    <div className={`min-h-screen flex flex-col transition-colors duration-300 ${modoNoche ? "bg-transparent text-slate-100" : "bg-surface text-on-surface"
+      }`}>
       {/* Encabezado fijo superior */}
-      <header className="fixed top-0 w-full z-40 pt-safe bg-surface/85 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+      <header className={`fixed top-0 w-full z-40 pt-safe backdrop-blur-xl transition-colors duration-300 ${modoNoche
+        ? "bg-[#081024]/85 border-b border-indigo-400/15 shadow-[0_4px_20px_rgba(0,0,0,0.35)]"
+        : "bg-surface/85 shadow-[0_1px_8px_rgba(0,0,0,0.04)]"
+        }`}>
         <div className="h-28 max-w-2xl mx-auto px-5 flex flex-col justify-between pb-2">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center text-primary shadow-xs">
-                <Heart className="w-4 h-4 fill-primary" />
+                <img src={Logo?.src} className="w-12 h-10 " />
               </div>
               <span className="font-serif text-[22px] leading-[30px] text-primary font-semibold tracking-tight">
                 DediLove
@@ -324,6 +391,7 @@ export default function MuroPublicoPage() {
             </Link>
 
             <div className="flex items-center gap-2.5">
+              <BotonModoNoche className="h-10 px-3" />
               <Link
                 href="/crear"
                 className="inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-full bg-primary-container text-on-primary text-xs font-semibold tracking-wide shadow-[0_4px_16px_rgba(225,29,72,0.2)] hover:opacity-95 active:scale-95 transition-all"
@@ -377,15 +445,30 @@ export default function MuroPublicoPage() {
             return (
               <article
                 key={item.id}
-                className={`relative rounded-2xl ${fondo} p-5 sm:p-6 overflow-hidden transition-all duration-300 ${item.destacada
-                  ? "shadow-[0_8px_30px_rgba(100,40,50,0.06)]"
-                  : "shadow-[0_4px_20px_rgba(100,40,50,0.03)]"
-                  }`}
+                id={`dedicatoria-${item.id}`}
+                className={`relative rounded-2xl ${fondo} p-5 sm:p-6 overflow-hidden transition-all duration-300  ${modoNoche
+                  ? item.destacada
+                    ? "ring-1 ring-amber-200/30 shadow-[0_14px_36px_rgba(0,0,0,0.55)] brightness-[0.97]"
+                    : "ring-1 ring-indigo-300/15 shadow-[0_10px_28px_rgba(0,0,0,0.45)] brightness-[0.96]"
+                  : item.destacada
+                    ? "shadow-[0_8px_30px_rgba(100,40,50,0.06)]"
+                    : "shadow-[0_4px_20px_rgba(100,40,50,0.03)]"
+                  }
+                  ... ${destacadaId === item.id
+                    ? "ring-2 ring-rose-400 shadow-[0_0_28px_rgba(244,63,94,0.35)]"
+                    : ""
+                  }
+                  
+                  `}
               >
                 {item.destacada && (
                   <>
-                    <div className="absolute -top-12 -right-12 w-40 h-40 bg-gradient-to-br from-secondary-fixed/40 via-primary-fixed/30 to-transparent rounded-full blur-2xl pointer-events-none" />
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-secondary-container via-primary-container to-secondary-container opacity-80" />
+                    <div className={`absolute -top-12 -right-12 w-40 h-40 rounded-full blur-2xl pointer-events-none ${modoNoche
+                      ? "bg-gradient-to-br from-amber-300/20 via-rose-400/20 to-transparent"
+                      : "bg-gradient-to-br from-secondary-fixed/40 via-primary-fixed/30 to-transparent"
+                      }`} />
+                    <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-secondary-container via-primary-container to-secondary-container ${modoNoche ? "opacity-95" : "opacity-80"
+                      }`} />
                   </>
                 )}
 
@@ -405,12 +488,7 @@ export default function MuroPublicoPage() {
                   </div>
 
                   <div className="flex items-center gap-2 text-on-surface-variant text-xs">
-                    {item.musica && (
-                      <span className="inline-flex items-center gap-1 text-[11px] px-2.5 py-0.5 rounded-full bg-surface-container-low text-on-surface-variant">
-                        <Music className="w-3 h-3 text-primary" />
-                        <span>{item.musica}</span>
-                      </span>
-                    )}
+
                     <span className="text-[11px] opacity-75">{item.tiempo}</span>
                   </div>
                 </div>
@@ -527,21 +605,25 @@ export default function MuroPublicoPage() {
                       <span>{totalLikes.toLocaleString("es-ES")}</span>
                     </button>
 
-                    <button
-                      type="button"
-                      aria-label="Comentarios"
-                      className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-surface-container-low text-on-surface-variant hover:text-on-surface text-xs font-medium transition-colors"
-                    >
-                      <MessageCircle className="w-3.5 h-3.5" />
-                      <span>{item.comentarios}</span>
-                    </button>
+
 
                     <button
                       type="button"
+                      onClick={() => handleCompartir(item)}
+                      title={copiadoId === item.id ? "¡Enlace copiado!" : "Compartir dedicatoria"}
                       aria-label="Compartir dedicatoria"
-                      className="w-8 h-8 rounded-full bg-surface-container-low text-on-surface-variant hover:text-primary flex items-center justify-center transition-colors"
+                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${copiadoId === item.id
+                        ? "bg-emerald-500/20 text-emerald-300"
+                        : modoNoche
+                          ? "bg-slate-800/80 text-slate-300 hover:text-rose-300"
+                          : "bg-surface-container-low text-on-surface-variant hover:text-primary"
+                        }`}
                     >
-                      <Share2 className="w-3.5 h-3.5" />
+                      {copiadoId === item.id ? (
+                        <Check className="w-3.5 h-3.5" />
+                      ) : (
+                        <Share2 className="w-3.5 h-3.5" />
+                      )}
                     </button>
 
                     <button
