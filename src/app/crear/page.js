@@ -481,50 +481,76 @@ export default function EditorDedicatoriaPage() {
                 className="hidden"
             />
 
-            {/* Encabezado superior fijo */}
-            <header
-                className={`fixed top-0 w-full z-40 pt-safe backdrop-blur-xl transition-colors duration-300 ${modoNoche
-                    ? "bg-[#081024]/85 border-b border-indigo-400/15 shadow-[0_4px_20px_rgba(0,0,0,0.35)]"
-                    : "bg-surface/85 shadow-[0_1px_8px_rgba(0,0,0,0.04)]"
-                    }`}
+            
+{/* Encabezado superior fijo */}
+<header
+    className={`fixed top-0 w-full z-40 pt-safe backdrop-blur-xl transition-colors duration-300 ${
+        modoNoche
+            ? "bg-[#081024]/90 border-b border-indigo-400/15 shadow-[0_4px_20px_rgba(0,0,0,0.35)]"
+            : "bg-surface/90 border-b border-black/[0.04] shadow-[0_1px_8px_rgba(0,0,0,0.04)]"
+    }`}
+>
+    <div className="h-16 max-w-2xl mx-auto px-4 sm:px-5 flex items-center justify-between">
+
+        {/* Lado izquierdo */}
+        <div className="flex items-center gap-2.5 min-w-0">
+
+            {/* Volver */}
+            <button
+                type="button"
+                aria-label="Volver"
+                onClick={() => router.back()}
+                className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center transition-colors ${
+                    modoNoche
+                        ? "text-slate-300 hover:text-rose-300 hover:bg-slate-800/80"
+                        : "text-on-surface-variant hover:text-primary hover:bg-surface-container-low"
+                }`}
             >
-                <div className="h-16 max-w-2xl mx-auto px-5 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <button
-                            type="button"
-                            aria-label="Volver"
-                            onClick={() => router.back()}
-                            className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${modoNoche
-                                ? "text-slate-300 hover:text-rose-300 hover:bg-slate-800/80"
-                                : "text-on-surface-variant hover:text-primary hover:bg-surface-container-low"
-                                }`}
-                        >
-                            <ChevronLeft className="w-5 h-5" />
-                        </button>
-                        <div className="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-primary">
-                            <img
-                                src={logo?.src}
-                                alt="DediLove"
-                                className="w-14 h-9 fill-primary"
-                            />
-                        </div>
-                        <h1
-                            className={`font-serif text-[20px] leading-[28px] font-semibold transition-colors ${modoNoche ? "text-slate-100" : "text-on-surface"
-                                }`}
-                        >
-                            Editor de Dedicatoria
-                        </h1>
-                    </div>
+                <ChevronLeft className="w-5 h-5" />
+            </button>
 
-                    <div className="flex items-center gap-2">
-                        <BotonModoNoche className="h-9 px-3" />
+            {/* Logo */}
+            <div className="w-9 h-9 shrink-0 rounded-full bg-primary-fixed flex items-center justify-center overflow-hidden">
+                <img
+                    src={logo?.src}
+                    alt="DediLove"
+                    className="w-8 h-8 object-contain"
+                />
+            </div>
 
-                        <div className="w-9 h-9 rounded-full bg-primary-fixed text-primary font-serif text-xs font-bold flex items-center justify-center ring-2 ring-primary-fixed/70">
-                            {(user?.displayName || "D").charAt(0).toUpperCase()}
-                        </div>
-                    </div>
-                </div>
-            </header>
+            {/* Identidad */}
+            <div className="flex flex-col justify-center min-w-0">
+                <span
+                    className={`font-serif text-[16px] leading-5 font-semibold truncate ${
+                        modoNoche ? "text-slate-100" : "text-on-surface"
+                    }`}
+                >
+                    Nueva dedicatoria
+                </span>
+
+                <span
+                    className={`text-[10px] leading-4 font-medium tracking-wide ${
+                        modoNoche ? "text-slate-400" : "text-on-surface-variant"
+                    }`}
+                >
+                    DediLove
+                </span>
+            </div>
+        </div>
+
+        {/* Lado derecho */}
+        <div className="flex items-center gap-2 shrink-0">
+
+            <BotonModoNoche className="h-9 px-3" />
+
+            {/* Perfil */}
+            <div className="w-9 h-9 rounded-full bg-primary-fixed text-primary font-serif text-xs font-bold flex items-center justify-center ring-2 ring-primary-fixed/70">
+                {(user?.displayName || "D").charAt(0).toUpperCase()}
+            </div>
+        </div>
+
+    </div>
+</header>
 
             {/* Contenido principal */}
             <main className="flex-1 w-full max-w-2xl mx-auto pt-20 pb-28 px-5">

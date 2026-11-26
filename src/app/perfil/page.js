@@ -62,7 +62,7 @@ function TarjetaDedicatoria({ d, onEliminar }) {
 
             <div className="flex items-center justify-between pt-space-xs text-on-surface-variant">
                 <span className="font-body-sm text-body-sm truncate">
-                    {d.despedida} {d.remitente} · {fecha}
+                    {d.remitente} · {fecha}
                 </span>
                 <div className="flex items-center gap-1 text-primary">
                     <span
