@@ -168,6 +168,63 @@ export default function EditorDedicatoriaPage() {
 
     const limiteCaracteres = 500;
 
+    const [cupoAlbum, setCupoAlbum] = useState(null);
+    const [comprobandoCupo, setComprobandoCupo] = useState(false);
+
+    const consultarCupoAlbum = async () => {
+        if (!user) return null;
+        setComprobandoCupo(true);
+        try {
+            const idToken = await user.getIdToken();
+            const res = await fetch("/api/album/cupo", {
+                method: "POST",
+                headers: { Authorization: `Bearer ${idToken}` },
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok) {
+                setCupoAlbum(data);
+                return data;
+            }
+            return null;
+        } catch (err) {
+            console.error("Error consultando cupo de álbumes:", err);
+            return null;
+        } finally {
+            setComprobandoCupo(false);
+        }
+    };
+
+    const manejarToggleAlbum = async (siguienteEstado) => {
+        setErrorForm("");
+        if (!siguienteEstado) {
+            setAlbumActivo(false);
+            return;
+        }
+
+        const dataCupo = await consultarCupoAlbum();
+        if (dataCupo && dataCupo.disponible === false) {
+            setAlbumActivo(false);
+            setErrorForm(
+                esPremium
+                    ? `Has alcanzado el límite de ${dataCupo.maximo || 20} álbumes privados en tu cuenta Premium. Puedes seguir creando dedicatorias normales o eliminar algún álbum existente.`
+                    : `Ya usaste tus ${dataCupo.maximo} álbumes gratuitos. Elimina alguno o pasa a premium para crear más.`
+            );
+            return;
+        }
+
+        setAlbumActivo(true);
+    };
+
+    useEffect(() => {
+        return () => {
+            fotosSeleccionadas.forEach((foto) => {
+                if (foto.previewUrl) {
+                    URL.revokeObjectURL(foto.previewUrl);
+                }
+            });
+        };
+    }, [fotosSeleccionadas]);
+
     useEffect(() => {
         if (loading) return;
         if (!user) {
@@ -308,8 +365,11 @@ export default function EditorDedicatoriaPage() {
                 const cupo = await resCupo.json().catch(() => ({}));
                 if (resCupo.ok && !cupo.disponible) {
                     setErrorForm(
-                        `Ya usaste tus ${cupo.maximo} álbumes gratuitos. Elimina alguno o pasa a premium para crear más.`
+                        esPremium
+                            ? `Has alcanzado el límite de ${cupo.maximo || 20} álbumes privados en tu cuenta Premium. Puedes publicar esta dedicatoria sin álbum o eliminar un álbum existente.`
+                            : `Ya usaste tus ${cupo.maximo} álbumes gratuitos. Elimina alguno o pasa a premium para crear más.`
                     );
+
                     return;
                 }
             }
@@ -864,14 +924,20 @@ export default function EditorDedicatoriaPage() {
                                     role="switch"
                                     aria-checked={albumActivo}
                                     aria-label="Activar álbum privado"
-                                    onClick={() => setAlbumActivo((prev) => !prev)}
-                                    className={`w-12 h-6 rounded-full p-0.5 flex items-center transition-colors shrink-0 ${albumActivo
+                                    disabled={comprobandoCupo}
+                                    onClick={() => manejarToggleAlbum(!albumActivo)}
+                                    className={`w-12 h-6 rounded-full p-0.5 flex items-center transition-colors shrink-0 disabled:opacity-50 ${albumActivo
                                         ? "bg-primary justify-end"
                                         : "bg-surface-container-highest justify-start"
                                         }`}
                                 >
                                     <span className="w-5 h-5 rounded-full bg-white shadow-xs" />
                                 </button>
+                                {albumActivo && cupoAlbum && (
+                                    <p className="text-xs text-muted-foreground mt-1.5">
+                                        Álbumes privados usados: {cupoAlbum.usados} / {cupoAlbum.maximo}
+                                    </p>
+                                )}
                             </div>
 
                             {albumActivo && (
@@ -1002,9 +1068,9 @@ export default function EditorDedicatoriaPage() {
                         </button>
                     </div>
                 </div>
-                
+
             </main>
-            <FooterLegal/>
+            <FooterLegal />
             {modalPremiumAbierto && !esPremium && (
                 <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
                     <div

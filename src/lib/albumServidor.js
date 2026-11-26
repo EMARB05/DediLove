@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 export const LIMITE_FOTOS_GRATIS = 5;
 export const LIMITE_FOTOS_PREMIUM = 20;
 export const MAX_ALBUMES_GRATIS = 2;
+export const MAX_ALBUMES_PREMIUM = 20;
 
 const MAX_FALLOS = 5;
 const BLOQUEO_MS = 15 * 60 * 1000;

@@ -2,7 +2,11 @@ import bcrypt from "bcryptjs";
 import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { adminDb, usuarioDesdeRequest } from "../../../../lib/firebaseAdmin";
-import { limiteFotos, MAX_ALBUMES_GRATIS } from "../../../../lib/albumServidor";
+import {
+  limiteFotos,
+  MAX_ALBUMES_GRATIS,
+  MAX_ALBUMES_PREMIUM,
+} from "../../../../lib/albumServidor";
 
 export async function POST(request) {
   const user = await usuarioDesdeRequest(request);
@@ -43,37 +47,26 @@ export async function POST(request) {
     );
   }
 
-  // Cupo de álbumes gratuitos por usuario
-  if (!esUsuarioPremium) {
-    const otros = await adminDb
-      .collection("dedicatorias")
-      .where("autorId", "==", user.uid)
-      .where("albumPrivado.activo", "==", true)
-      .get();
-    const gratisUsados = otros.docs.filter(
-      (d) => d.id !== dedicatoriaId && !d.data().premium
-    ).length;
-    if (gratisUsados >= MAX_ALBUMES_GRATIS) {
+  // Cupo de álbumes por tipo de cuenta (no impide crear dedicatorias normales)
+  const otros = await adminDb
+    .collection("dedicatorias")
+    .where("autorId", "==", user.uid)
+    .where("albumPrivado.activo", "==", true)
+    .get();
+
+  const otrosDocs = otros.docs.filter((d) => d.id !== dedicatoriaId);
+
+  if (esUsuarioPremium) {
+    if (otrosDocs.length >= MAX_ALBUMES_PREMIUM) {
       return NextResponse.json(
         {
-          error: `Ya tienes ${MAX_ALBUMES_GRATIS} álbumes gratuitos. Elimina uno o pasa a premium para crear más.`,
+          error: `Has alcanzado el máximo de ${MAX_ALBUMES_PREMIUM} álbumes privados de tu plan Premium. Puedes seguir creando dedicatorias normales o eliminar un álbum existente.`,
         },
         { status: 403 }
       );
     }
-  }
-  
-
-  // Cupo de álbumes gratuitos por usuario
-  if (!ded.premium) {
-    const otros = await adminDb
-      .collection("dedicatorias")
-      .where("autorId", "==", user.uid)
-      .where("albumPrivado.activo", "==", true)
-      .get();
-    const gratisUsados = otros.docs.filter(
-      (d) => d.id !== dedicatoriaId && !d.data().premium
-    ).length;
+  } else {
+    const gratisUsados = otrosDocs.filter((d) => !d.data().premium).length;
     if (gratisUsados >= MAX_ALBUMES_GRATIS) {
       return NextResponse.json(
         {
